@@ -52,10 +52,15 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
     // 3. Build the tmux session.
     build_session(&loaded, &session, &work_cwd)?;
 
-    // 4. Status bar (per-session, scoped).
+    // 4. Tag the session so `sessionx open` / `ls --all` can find it cross-project.
+    tmux::set_user_option(&session, "sessionx-managed", "1")?;
+    tmux::set_user_option(&session, "sessionx-project", &loaded.project_root.display().to_string())?;
+    tmux::set_user_option(&session, "sessionx-handle", handle)?;
+
+    // 5. Status bar (per-session, scoped).
     status::apply(&session, &loaded.config.status)?;
 
-    // 5. Attach (or print).
+    // 6. Attach (or print).
     if attach {
         tmux::attach_or_switch(&session)?;
     } else {

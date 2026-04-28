@@ -4,7 +4,7 @@ _sessionx() {
     local cur prev words cword
     _init_completion || return
 
-    local commands="init edit add ls rm completions -h --help -V --version -v --verbose"
+    local commands="init edit add ls open rm completions -h --help -V --version -v --verbose"
     local cmd=""
     local i
     for ((i=1; i < cword; i++)); do
@@ -29,13 +29,18 @@ _sessionx() {
                 COMPREPLY=( $(compgen -W "$handles" -- "$cur") )
             fi
             ;;
+        open)
+            local managed
+            managed="$(sessionx open --names-only 2>/dev/null)"
+            COMPREPLY=( $(compgen -W "$managed" -- "$cur") )
+            ;;
         add)
             if [[ "$cur" == -* ]]; then
                 COMPREPLY=( $(compgen -W "--base --no-attach" -- "$cur") )
             fi
             ;;
         ls)
-            COMPREPLY=( $(compgen -W "--names-only" -- "$cur") )
+            COMPREPLY=( $(compgen -W "--names-only --all" -- "$cur") )
             ;;
         completions)
             COMPREPLY=( $(compgen -W "bash zsh fish" -- "$cur") )

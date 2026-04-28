@@ -8,6 +8,7 @@ _sessionx() {
         'edit:open .sessionx.yaml in $EDITOR'
         'add:create + attach a session'
         'ls:list sessions managed by sessionx'
+        'open:attach to any sessionx-managed session globally'
         'rm:tear down a session (and worktree)'
         'completions:print shell completion script'
     )
@@ -39,11 +40,17 @@ _sessionx() {
                         '--force[force removal]' \
                         '1:session:_sessionx_handles' && ret=0
                     ;;
+                open)
+                    _arguments \
+                        '1:session:_sessionx_managed' && ret=0
+                    ;;
                 completions)
                     _values 'shell' bash zsh fish && ret=0
                     ;;
                 ls)
-                    _arguments '--names-only[print only handles]' && ret=0
+                    _arguments \
+                        '--names-only[print only handles]' \
+                        '--all[list all managed sessions globally]' && ret=0
                     ;;
             esac
             ;;
@@ -52,10 +59,18 @@ _sessionx() {
 }
 
 _sessionx_handles() {
-    local -a handles
-    handles=(${(f)"$(sessionx ls --names-only 2>/dev/null)"})
-    if (( ${#handles} )); then
-        _describe -t handles 'session' handles
+    local -a h
+    h=(${(f)"$(sessionx ls --names-only 2>/dev/null)"})
+    if (( ${#h} )); then
+        _describe -t handles 'session' h
+    fi
+}
+
+_sessionx_managed() {
+    local -a h
+    h=(${(f)"$(sessionx open --names-only 2>/dev/null)"})
+    if (( ${#h} )); then
+        _describe -t managed 'managed session' h
     fi
 }
 

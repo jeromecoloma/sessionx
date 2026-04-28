@@ -158,6 +158,40 @@ pub fn list_sessions() -> Result<Vec<String>> {
     Ok(out.lines().map(|s| s.to_string()).collect())
 }
 
+/// Set a tmux user option (auto-prefixed with `@`) on a session.
+pub fn set_user_option(session: &str, key: &str, value: &str) -> Result<()> {
+    let opt = format!("@{key}");
+    run(&["set-option", "-t", session, &opt, value])?;
+    Ok(())
+}
+
+#[derive(Debug)]
+pub struct ManagedSession {
+    pub name: String,
+    pub project: String,
+    pub handle: String,
+}
+
+pub fn list_managed_sessions() -> Result<Vec<ManagedSession>> {
+    if !run_quiet(&["info"]) {
+        return Ok(vec![]);
+    }
+    let fmt = "#{session_name}\t#{@sessionx-managed}\t#{@sessionx-project}\t#{@sessionx-handle}";
+    let out = run(&["list-sessions", "-F", fmt])?;
+    let mut v = vec![];
+    for line in out.lines() {
+        let mut it = line.split('\t');
+        let name = it.next().unwrap_or("").to_string();
+        let managed = it.next().unwrap_or("");
+        let project = it.next().unwrap_or("").to_string();
+        let handle = it.next().unwrap_or("").to_string();
+        if managed == "1" && !name.is_empty() {
+            v.push(ManagedSession { name, project, handle });
+        }
+    }
+    Ok(v)
+}
+
 pub fn in_tmux() -> bool {
     std::env::var("TMUX").is_ok()
 }

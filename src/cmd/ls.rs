@@ -1,6 +1,18 @@
 use anyhow::Result;
 
-pub fn run(names_only: bool) -> Result<()> {
+pub fn run(names_only: bool, all: bool) -> Result<()> {
+    if all {
+        let managed = crate::tmux::list_managed_sessions()?;
+        for m in &managed {
+            if names_only {
+                println!("{}", m.name);
+            } else {
+                println!("{}\t{}\t{}", m.name, m.handle, m.project);
+            }
+        }
+        return Ok(());
+    }
+
     let loaded = crate::config::find_and_load()?;
     let prefix = loaded.session_prefix();
     let sessions = crate::tmux::list_sessions()?;

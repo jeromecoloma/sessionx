@@ -37,6 +37,17 @@ enum Cmd {
         /// Print only handles (one per line) — used by shell completions
         #[arg(long)]
         names_only: bool,
+        /// List all sessionx-managed sessions globally (across projects)
+        #[arg(long)]
+        all: bool,
+    },
+    /// Attach to any sessionx-managed session globally (no .sessionx.yaml needed)
+    Open {
+        /// Full session name (use TAB completion). Omit to print the list.
+        name: Option<String>,
+        /// Print only names — used by shell completions
+        #[arg(long)]
+        names_only: bool,
     },
     /// Kill a session (and remove worktree, in worktree mode)
     Rm {
@@ -59,7 +70,8 @@ fn main() -> Result<()> {
         Cmd::Init => cmd::init::run(),
         Cmd::Edit => cmd::edit::run(),
         Cmd::Add { name, base, no_attach } => cmd::add::run(&name, base.as_deref(), !no_attach),
-        Cmd::Ls { names_only } => cmd::ls::run(names_only),
+        Cmd::Ls { names_only, all } => cmd::ls::run(names_only, all),
+        Cmd::Open { name, names_only } => cmd::open::run(name.as_deref(), names_only),
         Cmd::Rm { name, force } => cmd::rm::run(&name, force),
         Cmd::Completions { shell } => print_completions(&shell),
     }
