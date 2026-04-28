@@ -43,6 +43,7 @@ complete -c sessionx -n __sessionx_no_subcmd -a ls          -d 'list sessions'
 complete -c sessionx -n __sessionx_no_subcmd -a open        -d 'attach to any managed session'
 complete -c sessionx -n __sessionx_no_subcmd -a rm          -d 'tear down a session'
 complete -c sessionx -n __sessionx_no_subcmd -a completions -d 'print completion script'
+complete -c sessionx -n __sessionx_no_subcmd -a themes      -d 'list built-in themes'
 
 complete -c sessionx -s v -l verbose -d 'print tmux/git commands'
 

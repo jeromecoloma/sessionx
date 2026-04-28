@@ -3,6 +3,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 use crate::config::StatusSpec;
+use crate::themes;
 use crate::tmux;
 
 fn segments_dir() -> Result<PathBuf> {
@@ -41,33 +42,54 @@ pub fn apply(session: &str, spec: &StatusSpec) -> Result<()> {
         write_segment(&seg.name, &seg.command)?;
     }
 
-    // Style options. Keys in the config use snake_case for ergonomics; tmux uses dashes.
-    // Window/pane-scoped options must be applied per-window (set-window-option).
+    // Resolve theme defaults if a theme is named.
+    let theme = match &spec.theme {
+        Some(name) => Some(themes::load(name)?),
+        None => None,
+    };
+
+    // Merge style: theme first, user overrides on top.
+    let mut style = std::collections::BTreeMap::new();
+    if let Some(t) = &theme {
+        for (k, v) in &t.style {
+            style.insert(k.clone(), v.clone());
+        }
+    }
     for (k, v) in &spec.style {
-        let key = k.replace('_', "-");
+        // Normalize user keys to dashed form so they collide with theme keys.
+        style.insert(k.replace('_', "-"), v.clone());
+    }
+
+    for (key, v) in &style {
         if key.starts_with("window-") || key.starts_with("pane-") {
-            tmux::set_window_option_for_all(session, &key, v)?;
+            tmux::set_window_option_for_all(session, key, v)?;
         } else {
-            tmux::set_option(session, &key, v)?;
+            tmux::set_option(session, key, v)?;
         }
     }
 
-    if let Some(left) = &spec.left {
+    let theme_left = theme.as_ref().and_then(|t| t.left.as_deref());
+    let theme_right = theme.as_ref().and_then(|t| t.right.as_deref());
+    let theme_win = theme.as_ref().and_then(|t| t.window_format.as_deref());
+    let theme_curwin = theme.as_ref().and_then(|t| t.current_window_format.as_deref());
+    let theme_interval = theme.as_ref().and_then(|t| t.status_interval);
+
+    if let Some(left) = spec.left.as_deref().or(theme_left) {
         tmux::set_option(session, "status-left", left)?;
         // Default left-length is 10 — usually too short for custom segments.
         tmux::set_option(session, "status-left-length", "200")?;
     }
-    if let Some(right) = &spec.right {
+    if let Some(right) = spec.right.as_deref().or(theme_right) {
         tmux::set_option(session, "status-right", right)?;
         tmux::set_option(session, "status-right-length", "200")?;
     }
-    if let Some(fmt) = &spec.window_format {
+    if let Some(fmt) = spec.window_format.as_deref().or(theme_win) {
         tmux::set_window_option_for_all(session, "window-status-format", fmt)?;
     }
-    if let Some(fmt) = &spec.current_window_format {
+    if let Some(fmt) = spec.current_window_format.as_deref().or(theme_curwin) {
         tmux::set_window_option_for_all(session, "window-status-current-format", fmt)?;
     }
-    if let Some(interval) = spec.status_interval {
+    if let Some(interval) = spec.status_interval.or(theme_interval) {
         tmux::set_option(session, "status-interval", &interval.to_string())?;
     }
 

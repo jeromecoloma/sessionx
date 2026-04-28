@@ -89,6 +89,8 @@ pub struct FilesSpec {
 pub struct StatusSpec {
     #[serde(default = "default_true")]
     pub enabled: bool,
+    /// Optional preset theme name. User-provided keys below override theme defaults.
+    pub theme: Option<String>,
     #[serde(default)]
     pub style: std::collections::BTreeMap<String, String>,
     pub left: Option<String>,

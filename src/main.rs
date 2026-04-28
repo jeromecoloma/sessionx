@@ -1,6 +1,7 @@
 mod config;
 mod tmux;
 mod status;
+mod themes;
 mod worktree;
 mod hooks;
 mod cmd;
@@ -59,6 +60,8 @@ enum Cmd {
     Completions {
         shell: String,
     },
+    /// List built-in status-bar themes
+    Themes,
 }
 
 fn main() -> Result<()> {
@@ -74,6 +77,12 @@ fn main() -> Result<()> {
         Cmd::Open { name, names_only } => cmd::open::run(name.as_deref(), names_only),
         Cmd::Rm { name, force } => cmd::rm::run(&name, force),
         Cmd::Completions { shell } => print_completions(&shell),
+        Cmd::Themes => {
+            for t in themes::list() {
+                println!("{t}");
+            }
+            Ok(())
+        }
     }
 }
 

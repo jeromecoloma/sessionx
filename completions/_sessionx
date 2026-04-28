@@ -11,6 +11,7 @@ _sessionx() {
         'open:attach to any sessionx-managed session globally'
         'rm:tear down a session (and worktree)'
         'completions:print shell completion script'
+        'themes:list built-in status-bar themes'
     )
 
     local context curcontext="$curcontext" state line ret=1

@@ -66,17 +66,23 @@ windows:
 #-------------------------------------------------------------------------------
 status:
   enabled: true
-  style:
-    status_style: "bg=#1e1e2e,fg=#cdd6f4"
-    window_status_current_style: "bg=#89b4fa,fg=#1e1e2e,bold"
-    window_status_style: "fg=#9399b2"
-    pane_active_border_style: "fg=#89b4fa"
 
-  left: " #S "
-  right: " #(~/.sessionx/segments/clock.sh) "
-  window_format: " #I:#W "
-  current_window_format: " #I:#W "
-  status_interval: 5
+  # Pick a preset theme (optional). Available:
+  #   tokyo-night, catppuccin, dracula, gruvbox, nord, rose-pine, minimal
+  # Anything you set in `style:` / `left:` / `right:` / `window_format:` etc.
+  # below overrides the theme's defaults.
+  theme: tokyo-night
+
+  # Manual overrides (all optional). Style keys map 1:1 to tmux options
+  # (snake_case → kebab-case). See `man tmux`.
+  # style:
+  #   status_style: "bg=#1e1e2e,fg=#cdd6f4"
+  #   window_status_current_style: "bg=#89b4fa,fg=#1e1e2e,bold"
+  # left: " #S "
+  # right: " #(~/.sessionx/segments/clock.sh) "
+  # window_format: " #I:#W "
+  # current_window_format: " #I:#W "
+  # status_interval: 5
 
   # Custom shell-driven segments.
   # Each is materialized to ~/.sessionx/segments/<name>.sh and refreshed by

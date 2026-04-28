@@ -46,6 +46,14 @@ sessionx ls
 sessionx rm work
 ```
 
+From any directory, attach to any sessionx-managed session globally:
+
+```sh
+sessionx ls --all              # list every managed session, across projects
+sessionx open <TAB>            # complete full session names
+sessionx open my-project-work  # attach (or switch-client if already in tmux)
+```
+
 ## Modes
 
 - **plain** (default): `sessionx add <name>` spawns a tmux session in the project directory.
@@ -55,6 +63,35 @@ sessionx rm work
 
 The headline feature. `status:` in `.sessionx.yaml` is applied **scoped to the spawned session only** — other tmux sessions are untouched.
 
+### Themes
+
+Pick a preset or roll your own. Built-in themes:
+
+`tokyo-night`, `catppuccin`, `dracula`, `gruvbox`, `nord`, `rose-pine`, `minimal`
+
+```yaml
+status:
+  theme: tokyo-night
+```
+
+Themes ship with sensible defaults for status colors, the left/right segments (host badge + prefix-aware session label + date/time), window list format, and refresh interval. The prefix-aware session label flips its icon when you press your tmux prefix (e.g. `Ctrl+a`), mirroring the behavior in the screenshot.
+
+### Manual overrides
+
+Anything you set under `status:` overrides the theme. You can mix — pick a theme for colors, then customize the right side:
+
+```yaml
+status:
+  theme: tokyo-night
+  right: " #(~/.sessionx/segments/clock.sh) | %m-%d %H:%M "
+  segments:
+    - name: clock
+      command: "date +%H:%M:%S"
+  status_interval: 1
+```
+
+Or skip themes entirely and define everything yourself:
+
 ```yaml
 status:
   style:
@@ -62,10 +99,6 @@ status:
     window_status_current_style: "bg=#89b4fa,fg=#1e1e2e,bold"
   left: " #S "
   right: " #(~/.sessionx/segments/clock.sh) "
-  segments:
-    - name: clock
-      command: "date +%H:%M:%S"
-  status_interval: 1
 ```
 
 Style keys map 1:1 to tmux options — `status_style` becomes `status-style`, etc.
@@ -91,8 +124,11 @@ These mirror workmux's `WM_*` vars — porting an existing workmux script is mos
 | `sessionx init` | Write a starter `.sessionx.yaml`. |
 | `sessionx edit` | Open `.sessionx.yaml` in `$VISUAL`/`$EDITOR`. |
 | `sessionx add <name> [--base <ref>] [--no-attach]` | Create + attach. |
-| `sessionx ls` | List sessions managed by this project. |
+| `sessionx ls [--all] [--names-only]` | List sessions for this project; `--all` lists every managed session globally. |
+| `sessionx open [<session>]` | Attach to any sessionx-managed session globally. No arg prints the list. Works from any cwd. |
 | `sessionx rm <name> [--force]` | Tear down. |
+| `sessionx themes` | List built-in status-bar themes. |
+| `sessionx completions <bash\|zsh\|fish>` | Print completion script. |
 
 Add `-v` to any command to see the underlying `tmux`/`git` calls.
 
@@ -109,4 +145,4 @@ sessionx completions bash > /usr/local/etc/bash_completion.d/sessionx
 sessionx completions fish > ~/.config/fish/completions/sessionx.fish
 ```
 
-Supported shells: `bash`, `zsh`, `fish`, `elvish`, `powershell`.
+Supported shells: `bash`, `zsh`, `fish`. Completions are dynamic — `rm <TAB>` lists handles in the current project, `open <TAB>` lists every managed session globally.

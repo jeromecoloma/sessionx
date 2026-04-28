@@ -4,7 +4,7 @@ _sessionx() {
     local cur prev words cword
     _init_completion || return
 
-    local commands="init edit add ls open rm completions -h --help -V --version -v --verbose"
+    local commands="init edit add ls open rm completions themes -h --help -V --version -v --verbose"
     local cmd=""
     local i
     for ((i=1; i < cword; i++)); do
