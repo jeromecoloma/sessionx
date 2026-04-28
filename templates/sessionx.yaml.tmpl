@@ -1,0 +1,93 @@
+# sessionx project configuration
+# Run `sessionx add <name>` from this directory.
+
+#-------------------------------------------------------------------------------
+# Mode
+#-------------------------------------------------------------------------------
+
+# session  = each `add` creates a new tmux session  (default)
+# window   = each `add` creates a window in the current session
+mode: session
+
+# Uncomment to enable worktree mode. With this set, `sessionx add feat-1` will:
+#   1. git worktree add <worktree_dir>/feat-1 -b feat-1
+#   2. run post_create hooks inside that worktree
+#   3. spawn a tmux session named "<project>-feat-1" rooted at the worktree
+# worktree_dir: .worktrees
+# worktree_naming: basename       # full | basename
+# session_prefix: ""              # default: "<project-dir-name>-"
+
+#-------------------------------------------------------------------------------
+# Layout — pick ONE of `windows:` or `panes:`
+#-------------------------------------------------------------------------------
+windows:
+  - name: shell
+    panes:
+      - command: exec $SHELL
+        focus: true
+  - name: edit
+    panes:
+      - command: ${EDITOR:-vi} .
+
+# panes:
+#   - command: exec $SHELL
+#     focus: true
+#   - split: vertical
+#     percentage: 30
+#     command: tail -f log/dev.log
+
+#-------------------------------------------------------------------------------
+# Hooks (bash strings, run via `bash -lc`)
+#
+# Available env vars:
+#   SX_PROJECT_ROOT, SX_HANDLE, SX_SESSION_NAME
+#   SX_WORKTREE_PATH, SX_BRANCH_NAME   (worktree mode only)
+#   SX_ICON_<NAME>                     (from status.icons below)
+#-------------------------------------------------------------------------------
+# post_create:
+#   - SX_LARAVEL_DIR=www bash ~/.sessionx/scripts/laravel-herd-setup.sh
+# pre_remove:
+#   - SX_LARAVEL_DIR=www bash ~/.sessionx/scripts/laravel-herd-teardown.sh
+
+#-------------------------------------------------------------------------------
+# File operations on worktree creation (worktree mode only)
+#-------------------------------------------------------------------------------
+# files:
+#   copy:
+#     - .env
+#   symlink:
+#     - node_modules
+
+#-------------------------------------------------------------------------------
+# Status bar — applied per-session, never globally.
+#
+# Style keys map directly to tmux options (snake_case → kebab-case).
+# See `man tmux` for the full list.
+#-------------------------------------------------------------------------------
+status:
+  enabled: true
+  style:
+    status_style: "bg=#1e1e2e,fg=#cdd6f4"
+    window_status_current_style: "bg=#89b4fa,fg=#1e1e2e,bold"
+    window_status_style: "fg=#9399b2"
+    pane_active_border_style: "fg=#89b4fa"
+
+  left: " #S "
+  right: " #(~/.sessionx/segments/clock.sh) "
+  window_format: " #I:#W "
+  current_window_format: " #I:#W "
+  status_interval: 5
+
+  # Custom shell-driven segments.
+  # Each is materialized to ~/.sessionx/segments/<name>.sh and refreshed by
+  # tmux every `status_interval` seconds when referenced via #(...).
+  segments:
+    - name: clock
+      command: "date +%H:%M:%S"
+      interval: 1
+
+  # Icons exposed to hook scripts as SX_ICON_<NAME>.
+  icons:
+    working: "🤖"
+    waiting: "💬"
+    done: "✅"

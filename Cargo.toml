@@ -1,0 +1,22 @@
+[package]
+name = "sessionx"
+version = "0.1.0"
+edition = "2021"
+description = "A simple tmux session manager with optional git-worktree mode and per-project status bars"
+
+[[bin]]
+name = "sessionx"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+anyhow = "1"
+dirs = "5"
+shell-words = "1"
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 1

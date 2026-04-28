@@ -1,0 +1,29 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+*.pdb
+
+# Cargo
+# Keep Cargo.lock — this is a binary crate.
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Tooling caches
+.cache/
+.direnv/
+.envrc
+
+# Local agent / scratch dirs
+.claude/
+.tbt-agentic/
+_scripts/
+
+# Local testing
+.sessionx.yaml.local
+*.log

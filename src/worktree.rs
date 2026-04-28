@@ -1,0 +1,128 @@
+use anyhow::{anyhow, Context, Result};
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+use crate::config::{FilesSpec, Loaded, WorktreeNaming};
+
+fn verbose() -> bool {
+    std::env::var("SX_VERBOSE").ok().as_deref() == Some("1")
+}
+
+fn git(cwd: &Path, args: &[&str]) -> Result<String> {
+    if verbose() {
+        eprintln!("+ git -C {} {}", cwd.display(), args.join(" "));
+    }
+    let out = Command::new("git").current_dir(cwd).args(args).output()?;
+    if !out.status.success() {
+        return Err(anyhow!(
+            "git {} failed: {}",
+            args.join(" "),
+            String::from_utf8_lossy(&out.stderr).trim()
+        ));
+    }
+    Ok(String::from_utf8_lossy(&out.stdout).into_owned())
+}
+
+pub fn handle_to_branch(handle: &str, _naming: WorktreeNaming) -> String {
+    // For now branch == handle. `naming` only affects how we *display* it later.
+    handle.to_string()
+}
+
+pub fn worktree_path(loaded: &Loaded, handle: &str) -> Result<PathBuf> {
+    let dir = loaded
+        .config
+        .worktree_dir
+        .as_ref()
+        .ok_or_else(|| anyhow!("worktree_dir not set"))?;
+    let leaf = match loaded.config.worktree_naming {
+        WorktreeNaming::Full => handle.replace('/', "-"),
+        WorktreeNaming::Basename => handle.rsplit('/').next().unwrap_or(handle).to_string(),
+    };
+    let base = Path::new(dir);
+    let abs = if base.is_absolute() {
+        base.to_path_buf()
+    } else {
+        loaded.project_root.join(base)
+    };
+    Ok(abs.join(leaf))
+}
+
+pub fn create(loaded: &Loaded, handle: &str, base: Option<&str>) -> Result<PathBuf> {
+    let path = worktree_path(loaded, handle)?;
+    if path.exists() {
+        return Err(anyhow!("worktree path already exists: {}", path.display()));
+    }
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    let branch = handle_to_branch(handle, loaded.config.worktree_naming);
+    let path_s = path.to_string_lossy().to_string();
+    let mut args = vec!["worktree", "add", "-b", &branch, &path_s];
+    if let Some(b) = base {
+        args.push(b);
+    }
+    git(&loaded.project_root, &args)?;
+    apply_files(loaded, &path)?;
+    Ok(path)
+}
+
+pub fn remove(loaded: &Loaded, handle: &str, force: bool) -> Result<()> {
+    let path = worktree_path(loaded, handle)?;
+    if !path.exists() {
+        return Ok(());
+    }
+    let path_s = path.to_string_lossy().to_string();
+    let mut args = vec!["worktree", "remove"];
+    if force {
+        args.push("--force");
+    }
+    args.push(&path_s);
+    git(&loaded.project_root, &args)?;
+    let branch = handle_to_branch(handle, loaded.config.worktree_naming);
+    // Best-effort branch delete; ignore failure (e.g. unmerged without force).
+    let _ = git(
+        &loaded.project_root,
+        &["branch", if force { "-D" } else { "-d" }, &branch],
+    );
+    Ok(())
+}
+
+fn apply_files(loaded: &Loaded, dest: &Path) -> Result<()> {
+    let spec: &FilesSpec = &loaded.config.files;
+    for rel in &spec.copy {
+        let src = loaded.project_root.join(rel);
+        if !src.exists() {
+            continue;
+        }
+        let dst = dest.join(rel);
+        if let Some(parent) = dst.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::copy(&src, &dst).with_context(|| format!("copy {} → {}", src.display(), dst.display()))?;
+    }
+    for rel in &spec.symlink {
+        let src = loaded.project_root.join(rel);
+        if !src.exists() {
+            continue;
+        }
+        let dst = dest.join(rel);
+        if let Some(parent) = dst.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        if dst.exists() || dst.symlink_metadata().is_ok() {
+            continue;
+        }
+        std::os::unix::fs::symlink(&src, &dst)
+            .with_context(|| format!("symlink {} → {}", src.display(), dst.display()))?;
+    }
+    Ok(())
+}
+
+pub fn is_git_repo(path: &Path) -> bool {
+    Command::new("git")
+        .current_dir(path)
+        .args(["rev-parse", "--git-dir"])
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false)
+}
