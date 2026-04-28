@@ -12,6 +12,7 @@ _sessionx() {
         'rm:tear down a session (and worktree)'
         'completions:print shell completion script'
         'themes:list built-in status-bar themes'
+        'theme:manage project theme (set/preview/list)'
     )
 
     local context curcontext="$curcontext" state line ret=1
@@ -48,6 +49,35 @@ _sessionx() {
                 completions)
                     _values 'shell' bash zsh fish && ret=0
                     ;;
+                theme)
+                    _arguments -C \
+                        '--no-apply[write yaml only]' \
+                        '--session[target session]:session:_sessionx_managed' \
+                        '1: :->themearg1' \
+                        '*:: :->themeargs' && ret=0
+                    case $state in
+                        themearg1)
+                            local -a theme_actions
+                            theme_actions=(
+                                'set:set + apply theme'
+                                'preview:try a theme without saving'
+                            )
+                            _alternative \
+                                'actions:action:(($theme_actions))' \
+                                'themes:theme:_sessionx_theme_names' && ret=0
+                            ;;
+                        themeargs)
+                            case $words[1] in
+                                set|preview)
+                                    _arguments \
+                                        '--no-apply[write yaml only]' \
+                                        '--session[target session]:session:_sessionx_managed' \
+                                        '1:theme:_sessionx_theme_names' && ret=0
+                                    ;;
+                            esac
+                            ;;
+                    esac
+                    ;;
                 ls)
                     _arguments \
                         '--names-only[print only handles]' \
@@ -72,6 +102,14 @@ _sessionx_managed() {
     h=(${(f)"$(sessionx open --names-only 2>/dev/null)"})
     if (( ${#h} )); then
         _describe -t managed 'managed session' h
+    fi
+}
+
+_sessionx_theme_names() {
+    local -a h
+    h=(${(f)"$(sessionx themes 2>/dev/null)"})
+    if (( ${#h} )); then
+        _describe -t themes 'theme' h
     fi
 }
 

@@ -127,7 +127,10 @@ These mirror workmux's `WM_*` vars — porting an existing workmux script is mos
 | `sessionx ls [--all] [--names-only]` | List sessions for this project; `--all` lists every managed session globally. |
 | `sessionx open [<session>]` | Attach to any sessionx-managed session globally. No arg prints the list. Works from any cwd. |
 | `sessionx rm <name> [--force]` | Tear down. |
-| `sessionx themes` | List built-in status-bar themes. |
+| `sessionx themes` | List built-in status-bar themes (one per line). |
+| `sessionx theme` | Show current theme + available themes (current marked `*`). |
+| `sessionx theme set <name> [--no-apply] [--session <s>]` | Rewrite `status.theme:` in `.sessionx.yaml` and live-apply to current tmux session. |
+| `sessionx theme preview <name> [--session <s>]` | Apply a theme to a running session without editing the YAML. |
 | `sessionx completions <bash\|zsh\|fish>` | Print completion script. |
 
 Add `-v` to any command to see the underlying `tmux`/`git` calls.

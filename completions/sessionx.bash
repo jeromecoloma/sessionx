@@ -4,7 +4,7 @@ _sessionx() {
     local cur prev words cword
     _init_completion || return
 
-    local commands="init edit add ls open rm completions themes -h --help -V --version -v --verbose"
+    local commands="init edit add ls open rm completions themes theme -h --help -V --version -v --verbose"
     local cmd=""
     local i
     for ((i=1; i < cword; i++)); do
@@ -44,6 +44,35 @@ _sessionx() {
             ;;
         completions)
             COMPREPLY=( $(compgen -W "bash zsh fish" -- "$cur") )
+            ;;
+        theme)
+            local sub=""
+            local j
+            for ((j=i+1; j < cword; j++)); do
+                case "${words[j]}" in
+                    -*) ;;
+                    *) sub="${words[j]}"; break ;;
+                esac
+            done
+            local themes
+            themes="$(sessionx themes 2>/dev/null)"
+            if [[ -z "$sub" ]]; then
+                if [[ "$cur" == -* ]]; then
+                    COMPREPLY=( $(compgen -W "--no-apply --session" -- "$cur") )
+                else
+                    COMPREPLY=( $(compgen -W "set preview $themes" -- "$cur") )
+                fi
+            else
+                case "$sub" in
+                    set|preview)
+                        if [[ "$cur" == -* ]]; then
+                            COMPREPLY=( $(compgen -W "--no-apply --session" -- "$cur") )
+                        else
+                            COMPREPLY=( $(compgen -W "$themes" -- "$cur") )
+                        fi
+                        ;;
+                esac
+            fi
             ;;
     esac
 }

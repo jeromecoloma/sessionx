@@ -38,6 +38,16 @@ pub fn has_session(name: &str) -> bool {
     run_quiet(&["has-session", "-t", &format!("={}", name)])
 }
 
+/// Returns the current tmux client's session name when invoked from inside tmux.
+pub fn current_session() -> Result<Option<String>> {
+    if std::env::var("TMUX").is_err() {
+        return Ok(None);
+    }
+    let out = run(&["display-message", "-p", "#S"])?;
+    let s = out.trim().to_string();
+    if s.is_empty() { Ok(None) } else { Ok(Some(s)) }
+}
+
 /// Returns `(window_id, pane_id)` for the session's first window/pane.
 pub fn new_session(name: &str, cwd: &Path, first_window_name: Option<&str>) -> Result<(String, String)> {
     let cwd_s = cwd.to_string_lossy().to_string();

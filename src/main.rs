@@ -62,6 +62,23 @@ enum Cmd {
     },
     /// List built-in status-bar themes
     Themes,
+    /// Manage the project's status-bar theme.
+    ///
+    /// No args → list themes. Bare theme name (e.g. `sessionx theme dracula`) is
+    /// shorthand for `sessionx theme set <name>`. Use `set`/`preview` explicitly
+    /// for finer control.
+    Theme {
+        /// `set`, `preview`, or a theme name (shorthand for `set <name>`).
+        arg: Option<String>,
+        /// When arg is `set` or `preview`: the theme name.
+        name: Option<String>,
+        /// Skip live-apply, write YAML only (for `set`).
+        #[arg(long)]
+        no_apply: bool,
+        /// Target tmux session instead of the current client's session.
+        #[arg(long)]
+        session: Option<String>,
+    },
 }
 
 fn main() -> Result<()> {
@@ -82,6 +99,28 @@ fn main() -> Result<()> {
                 println!("{t}");
             }
             Ok(())
+        }
+        Cmd::Theme { arg, name, no_apply, session } => {
+            match arg.as_deref() {
+                None => cmd::theme::run_list(),
+                Some("set") => {
+                    let n = name.ok_or_else(|| anyhow!("theme set: missing <name>"))?;
+                    cmd::theme::run_set(&n, !no_apply, session.as_deref())
+                }
+                Some("preview") => {
+                    let n = name.ok_or_else(|| anyhow!("theme preview: missing <name>"))?;
+                    cmd::theme::run_preview(&n, session.as_deref())
+                }
+                Some(theme_name) => {
+                    // Shorthand: `sessionx theme <name>` ≡ `sessionx theme set <name>`.
+                    if name.is_some() {
+                        return Err(anyhow!(
+                            "unexpected extra arg; did you mean `sessionx theme set <name>`?"
+                        ));
+                    }
+                    cmd::theme::run_set(theme_name, !no_apply, session.as_deref())
+                }
+            }
         }
     }
 }
