@@ -5,6 +5,7 @@ mod themes;
 mod worktree;
 mod hooks;
 mod cmd;
+mod picker;
 
 use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
@@ -16,7 +17,7 @@ struct Cli {
     verbose: bool,
 
     #[command(subcommand)]
-    cmd: Cmd,
+    cmd: Option<Cmd>,
 }
 
 #[derive(Subcommand)]
@@ -87,20 +88,21 @@ fn main() -> Result<()> {
         std::env::set_var("SX_VERBOSE", "1");
     }
     match cli.cmd {
-        Cmd::Init => cmd::init::run(),
-        Cmd::Edit => cmd::edit::run(),
-        Cmd::Add { name, base, no_attach } => cmd::add::run(&name, base.as_deref(), !no_attach),
-        Cmd::Ls { names_only, all } => cmd::ls::run(names_only, all),
-        Cmd::Open { name, names_only } => cmd::open::run(name.as_deref(), names_only),
-        Cmd::Rm { name, force } => cmd::rm::run(&name, force),
-        Cmd::Completions { shell } => print_completions(&shell),
-        Cmd::Themes => {
+        None => cmd::default::run(),
+        Some(Cmd::Init) => cmd::init::run(),
+        Some(Cmd::Edit) => cmd::edit::run(),
+        Some(Cmd::Add { name, base, no_attach }) => cmd::add::run(&name, base.as_deref(), !no_attach),
+        Some(Cmd::Ls { names_only, all }) => cmd::ls::run(names_only, all),
+        Some(Cmd::Open { name, names_only }) => cmd::open::run(name.as_deref(), names_only),
+        Some(Cmd::Rm { name, force }) => cmd::rm::run(&name, force),
+        Some(Cmd::Completions { shell }) => print_completions(&shell),
+        Some(Cmd::Themes) => {
             for t in themes::list() {
                 println!("{t}");
             }
             Ok(())
         }
-        Cmd::Theme { arg, name, no_apply, session } => {
+        Some(Cmd::Theme { arg, name, no_apply, session }) => {
             match arg.as_deref() {
                 None => cmd::theme::run_list(),
                 Some("set") => {

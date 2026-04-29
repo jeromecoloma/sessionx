@@ -52,6 +52,17 @@ sessionx ls
 sessionx rm work
 ```
 
+### No-arg interactive picker
+
+Run `sessionx` with no subcommand to get a context-aware menu:
+
+- **Attach/create project session** — when `.sessionx.yaml` is found
+- **Init `.sessionx.yaml` here** — when in a git repo without a config
+- **Open managed session** — any sessionx-managed session, across projects
+- **New plain tmux session** — auto-named, untracked
+
+The picker uses [`fzf`](https://github.com/junegunn/fzf) when installed, otherwise falls back to a built-in TUI. The installer offers to install fzf via Homebrew on macOS.
+
 From any directory, attach to any sessionx-managed session globally:
 
 ```sh

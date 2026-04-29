@@ -57,6 +57,24 @@ if (( ! COMPLETIONS_ONLY )); then
 fi
 
 #-------------------------------------------------------------------------------
+# 1b. Optional: fzf for the no-arg interactive picker
+#-------------------------------------------------------------------------------
+if ! command -v fzf >/dev/null 2>&1; then
+    if command -v brew >/dev/null 2>&1; then
+        if ask_yn "fzf not found — install via Homebrew? (recommended for the no-arg picker)"; then
+            brew install fzf || warn "brew install fzf failed; sessionx will fall back to its built-in picker"
+        else
+            log "skipping fzf install — sessionx will use its built-in picker"
+        fi
+    else
+        warn "fzf not found. Install it for a nicer no-arg picker:"
+        warn "  Debian/Ubuntu: sudo apt install fzf"
+        warn "  Arch:          sudo pacman -S fzf"
+        warn "  (sessionx falls back to its built-in picker without fzf)"
+    fi
+fi
+
+#-------------------------------------------------------------------------------
 # 2. Completions
 #-------------------------------------------------------------------------------
 if (( SKIP_COMPLETIONS )); then

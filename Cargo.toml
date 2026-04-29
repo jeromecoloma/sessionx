@@ -23,6 +23,7 @@ serde_yaml = "0.9"
 anyhow = "1"
 dirs = "5"
 shell-words = "1"
+inquire = "0.7"
 
 [profile.release]
 strip = true
