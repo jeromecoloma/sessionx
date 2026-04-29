@@ -33,6 +33,18 @@ Run a local binary:
 cargo run -- ls --all
 ```
 
+### Git hooks
+
+The repo ships a pre-push hook that runs `cargo fmt`, `clippy`, `test`, and a
+release build before every push. Enable it once per clone:
+
+```sh
+git config core.hooksPath .githooks
+```
+
+Bypass for an in-progress branch with `git push --no-verify` — but CI will
+still gate merging.
+
 ## Submitting a pull request
 
 1. Open an issue first for non-trivial changes. This avoids wasted work.

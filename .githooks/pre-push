@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Local CI gate. Mirrors .github/workflows/ci.yml.
+# Skip with: git push --no-verify
+set -euo pipefail
+
+echo "==> cargo fmt --check"
+cargo fmt --all -- --check
+
+echo "==> cargo clippy"
+cargo clippy --all-targets --all-features -- -D warnings
+
+echo "==> cargo test"
+cargo test --all-features --no-fail-fast
+
+echo "==> cargo build --release"
+cargo build --release
+
+echo "pre-push: ok"
