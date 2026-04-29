@@ -1,0 +1,31 @@
+# Config for cargo-release.
+# Install: cargo install cargo-release
+# Usage:   cargo release patch --execute     # 0.1.0 -> 0.1.1
+#          cargo release minor --execute     # 0.1.0 -> 0.2.0
+#          cargo release major --execute     # 0.1.0 -> 1.0.0
+#          cargo release 0.3.0 --execute     # explicit version
+#
+# Without --execute, cargo-release does a dry run and prints the plan.
+
+# Tag format must match the release.yml workflow trigger (v*.*.*).
+tag-name = "v{{version}}"
+tag-message = "v{{version}}"
+
+# Commit message for the version bump.
+pre-release-commit-message = "chore: release v{{version}}"
+
+# Push the bump commit AND the tag in one go. The tag is what fires the
+# GitHub release workflow.
+push = true
+publish = false             # set true once we publish to crates.io
+verify = true               # runs cargo build / fmt checks before bumping
+
+# Refuse to release from anything but main.
+allow-branch = ["main"]
+
+# Update CHANGELOG.md: move [Unreleased] heading content under the new version
+# heading, and re-create an empty [Unreleased] section.
+pre-release-replacements = [
+    { file = "CHANGELOG.md", search = "## \\[Unreleased\\]", replace = "## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly = 1 },
+    { file = "CHANGELOG.md", search = "v0.1.0\\.\\.\\.HEAD", replace = "v{{version}}...HEAD", exactly = 1 },
+]

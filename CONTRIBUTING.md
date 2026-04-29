@@ -86,6 +86,22 @@ If a PR has been waiting longer than this, a polite ping on the PR is fine.
 - Use GitHub issues and PRs. Decisions are documented in the repo, not in DMs.
 - Be kind. See [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
+## Releases
+
+Maintainers cut releases with [`cargo-release`](https://github.com/crate-ci/cargo-release):
+
+```sh
+cargo install cargo-release
+cargo release patch --execute     # 0.1.0 -> 0.1.1
+cargo release minor --execute     # 0.1.0 -> 0.2.0
+```
+
+This bumps `Cargo.toml`, updates `CHANGELOG.md`, commits, tags `vX.Y.Z`, and
+pushes. The pushed tag triggers `.github/workflows/release.yml`, which builds
+binaries for macOS + Linux and publishes a GitHub Release.
+
+Run without `--execute` first to see the plan.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under
