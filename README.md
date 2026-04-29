@@ -1,6 +1,12 @@
 # sessionx
 
+[![CI](https://github.com/jeromecoloma/sessionx/actions/workflows/ci.yml/badge.svg)](https://github.com/jeromecoloma/sessionx/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![MSRV](https://img.shields.io/badge/MSRV-1.75-blue.svg)](Cargo.toml)
+
 A small tmux session manager. Sits between [tmuxp](https://tmuxp.git-pull.com/) and [workmux](https://workmux.raine.dev/) — declarative YAML, optional git-worktree mode, pre/post hooks, and **per-project tmux status bars**.
+
+**Status:** Active — pre-1.0. APIs and config keys may change between minor releases; see [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Requirements
 
@@ -149,3 +155,16 @@ sessionx completions fish > ~/.config/fish/completions/sessionx.fish
 ```
 
 Supported shells: `bash`, `zsh`, `fish`. Completions are dynamic — `rm <TAB>` lists handles in the current project, `open <TAB>` lists every managed session globally.
+
+## Getting help
+
+- **Bugs / questions** — [open an issue](https://github.com/jeromecoloma/sessionx/issues).
+- **Security reports** — see [`SECURITY.md`](SECURITY.md). Do **not** open a public issue.
+
+## Contributing
+
+PRs welcome. Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a non-trivial PR — scope is intentionally narrow. By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+[MIT](LICENSE) © Jerome Coloma
