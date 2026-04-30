@@ -151,7 +151,13 @@ impl Loaded {
 /// tmux target syntax uses `.` and `:` as separators, so they're unsafe in session names.
 fn sanitize_session(s: &str) -> String {
     s.chars()
-        .map(|c| if matches!(c, '.' | ':' | ' ' | '\t') { '_' } else { c })
+        .map(|c| {
+            if matches!(c, '.' | ':' | ' ' | '\t') {
+                '_'
+            } else {
+                c
+            }
+        })
         .collect()
 }
 
@@ -175,18 +181,22 @@ pub fn find_and_load() -> Result<Loaded> {
         }
         match dir.parent() {
             Some(p) => dir = p,
-            None => return Err(anyhow!(
-                "no {} found in {} or any parent directory",
-                CONFIG_FILENAME,
-                cwd.display()
-            )),
+            None => {
+                return Err(anyhow!(
+                    "no {} found in {} or any parent directory",
+                    CONFIG_FILENAME,
+                    cwd.display()
+                ))
+            }
         }
     }
 }
 
 fn validate(c: &Config) -> Result<()> {
     if c.windows.is_some() && c.panes.is_some() {
-        return Err(anyhow!("config: 'windows' and 'panes' are mutually exclusive"));
+        return Err(anyhow!(
+            "config: 'windows' and 'panes' are mutually exclusive"
+        ));
     }
     Ok(())
 }
@@ -194,13 +204,12 @@ fn validate(c: &Config) -> Result<()> {
 /// Rewrite the `theme:` value under `status:` in a .sessionx.yaml file in place.
 /// Preserves comments, blank lines, and other keys. Atomic write via tempfile + rename.
 pub fn set_theme_in_file(path: &Path, theme: &str) -> Result<()> {
-    let content = std::fs::read_to_string(path)
-        .with_context(|| format!("reading {}", path.display()))?;
+    let content =
+        std::fs::read_to_string(path).with_context(|| format!("reading {}", path.display()))?;
     let updated = rewrite_theme(&content, theme);
 
     let tmp = path.with_extension("yaml.tmp");
-    std::fs::write(&tmp, &updated)
-        .with_context(|| format!("writing {}", tmp.display()))?;
+    std::fs::write(&tmp, &updated).with_context(|| format!("writing {}", tmp.display()))?;
     std::fs::rename(&tmp, path)
         .with_context(|| format!("renaming {} to {}", tmp.display(), path.display()))?;
     Ok(())
@@ -212,7 +221,8 @@ fn rewrite_theme(input: &str, theme: &str) -> String {
     // Find top-level `status:` line.
     let status_idx = lines.iter().position(|l| {
         let no_nl = l.trim_end_matches('\n');
-        no_nl == "status:" || no_nl.starts_with("status:") && !no_nl.starts_with(' ') && !no_nl.starts_with('\t')
+        no_nl == "status:"
+            || no_nl.starts_with("status:") && !no_nl.starts_with(' ') && !no_nl.starts_with('\t')
     });
 
     let Some(status_idx) = status_idx else {
@@ -302,14 +312,20 @@ mod tests {
     fn uncomments_commented_theme() {
         let input = "status:\n  enabled: true\n  # theme: tokyo-night\n  left: \" #S \"\n";
         let out = rewrite_theme(input, "nord");
-        assert_eq!(out, "status:\n  enabled: true\n  theme: nord\n  left: \" #S \"\n");
+        assert_eq!(
+            out,
+            "status:\n  enabled: true\n  theme: nord\n  left: \" #S \"\n"
+        );
     }
 
     #[test]
     fn inserts_when_missing_under_status() {
         let input = "status:\n  enabled: true\n  left: \" #S \"\n";
         let out = rewrite_theme(input, "gruvbox");
-        assert_eq!(out, "status:\n  theme: gruvbox\n  enabled: true\n  left: \" #S \"\n");
+        assert_eq!(
+            out,
+            "status:\n  theme: gruvbox\n  enabled: true\n  left: \" #S \"\n"
+        );
     }
 
     #[test]

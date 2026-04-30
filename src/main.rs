@@ -1,21 +1,30 @@
 mod agent;
+mod cmd;
 mod config;
-mod tmux;
-mod status;
-mod themes;
-mod worktree;
 mod hooks;
 mod hooks_repo;
-mod cmd;
 mod picker;
+mod status;
+mod themes;
+mod tmux;
+mod worktree;
 
 use anyhow::{anyhow, Result};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(name = "sessionx", version, about = "Simple tmux session manager with optional worktree mode")]
+#[command(
+    name = "sessionx",
+    version,
+    about = "Simple tmux session manager with optional worktree mode"
+)]
 struct Cli {
-    #[arg(short, long, global = true, help = "Print tmux/git commands as they run")]
+    #[arg(
+        short,
+        long,
+        global = true,
+        help = "Print tmux/git commands as they run"
+    )]
     verbose: bool,
 
     #[command(subcommand)]
@@ -80,9 +89,7 @@ enum Cmd {
         force: bool,
     },
     /// Print shell completions to stdout (bash, zsh, fish)
-    Completions {
-        shell: String,
-    },
+    Completions { shell: String },
     /// List built-in status-bar themes
     Themes,
     /// Manage the global config (`~/.config/sessionx/config.yaml`).
@@ -132,11 +139,25 @@ fn main() -> Result<()> {
     }
     match cli.cmd {
         None => cmd::default::run(),
-        Some(Cmd::Init { yes, force, theme, mode, worktree }) => {
-            cmd::init::run(cmd::init::InitOpts { yes, force, theme, mode, worktree })
-        }
+        Some(Cmd::Init {
+            yes,
+            force,
+            theme,
+            mode,
+            worktree,
+        }) => cmd::init::run(cmd::init::InitOpts {
+            yes,
+            force,
+            theme,
+            mode,
+            worktree,
+        }),
         Some(Cmd::Edit) => cmd::edit::run(),
-        Some(Cmd::Add { name, base, no_attach }) => cmd::add::run(&name, base.as_deref(), !no_attach),
+        Some(Cmd::Add {
+            name,
+            base,
+            no_attach,
+        }) => cmd::add::run(&name, base.as_deref(), !no_attach),
         Some(Cmd::Ls { names_only, all }) => cmd::ls::run(names_only, all),
         Some(Cmd::Open { name, names_only }) => cmd::open::run(name.as_deref(), names_only),
         Some(Cmd::Rm { name, force }) => cmd::rm::run(&name, force),
@@ -147,40 +168,41 @@ fn main() -> Result<()> {
             }
             Ok(())
         }
-        Some(Cmd::Config { arg, key, value }) => {
-            match arg.as_deref() {
-                None => cmd::config::run_edit(),
-                Some("path") => cmd::config::run_path(),
-                Some("get") => cmd::config::run_get(key.as_deref()),
-                Some("set") => {
-                    let k = key.ok_or_else(|| anyhow!("config set: missing <key>"))?;
-                    let v = value.ok_or_else(|| anyhow!("config set: missing <value>"))?;
-                    cmd::config::run_set(&k, &v)
-                }
-                Some(other) => Err(anyhow!(
-                    "unknown config subcommand '{other}' (try path|get|set or no arg)"
-                )),
+        Some(Cmd::Config { arg, key, value }) => match arg.as_deref() {
+            None => cmd::config::run_edit(),
+            Some("path") => cmd::config::run_path(),
+            Some("get") => cmd::config::run_get(key.as_deref()),
+            Some("set") => {
+                let k = key.ok_or_else(|| anyhow!("config set: missing <key>"))?;
+                let v = value.ok_or_else(|| anyhow!("config set: missing <value>"))?;
+                cmd::config::run_set(&k, &v)
             }
-        }
-        Some(Cmd::Hooks { arg, id }) => {
-            match arg.as_deref() {
-                None | Some("list") => cmd::hooks::run_list(),
-                Some("info") => {
-                    let id = id.ok_or_else(|| anyhow!("hooks info: missing <id>"))?;
-                    cmd::hooks::run_info(&id)
-                }
-                Some("install") => {
-                    let id = id.ok_or_else(|| anyhow!("hooks install: missing <id>"))?;
-                    cmd::hooks::run_install(&id)
-                }
-                Some("update") => cmd::hooks::run_update(),
-                Some("repo") => cmd::hooks::run_repo(),
-                Some(other) => Err(anyhow!(
-                    "unknown hooks subcommand '{other}' (try list|info|install|update|repo)"
-                )),
+            Some(other) => Err(anyhow!(
+                "unknown config subcommand '{other}' (try path|get|set or no arg)"
+            )),
+        },
+        Some(Cmd::Hooks { arg, id }) => match arg.as_deref() {
+            None | Some("list") => cmd::hooks::run_list(),
+            Some("info") => {
+                let id = id.ok_or_else(|| anyhow!("hooks info: missing <id>"))?;
+                cmd::hooks::run_info(&id)
             }
-        }
-        Some(Cmd::Theme { arg, name, no_apply, session }) => {
+            Some("install") => {
+                let id = id.ok_or_else(|| anyhow!("hooks install: missing <id>"))?;
+                cmd::hooks::run_install(&id)
+            }
+            Some("update") => cmd::hooks::run_update(),
+            Some("repo") => cmd::hooks::run_repo(),
+            Some(other) => Err(anyhow!(
+                "unknown hooks subcommand '{other}' (try list|info|install|update|repo)"
+            )),
+        },
+        Some(Cmd::Theme {
+            arg,
+            name,
+            no_apply,
+            session,
+        }) => {
             match arg.as_deref() {
                 None => cmd::theme::run_list(),
                 Some("set") => {
@@ -207,10 +229,10 @@ fn main() -> Result<()> {
 
 fn print_completions(shell: &str) -> Result<()> {
     let body = match shell {
-        "zsh"  => include_str!("../completions/_sessionx"),
+        "zsh" => include_str!("../completions/_sessionx"),
         "bash" => include_str!("../completions/sessionx.bash"),
         "fish" => include_str!("../completions/sessionx.fish"),
-        other  => return Err(anyhow!("unsupported shell: {other} (try zsh|bash|fish)")),
+        other => return Err(anyhow!("unsupported shell: {other} (try zsh|bash|fish)")),
     };
     print!("{body}");
     Ok(())

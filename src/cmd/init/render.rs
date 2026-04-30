@@ -55,9 +55,7 @@ fn enable_post_create(input: &str, post_cmd: &str, pre_cmd: &str) -> String {
         end = i + 1;
     }
 
-    let replacement = format!(
-        "post_create:\n  - {post_cmd}\npre_remove:\n  - {pre_cmd}"
-    );
+    let replacement = format!("post_create:\n  - {post_cmd}\npre_remove:\n  - {pre_cmd}");
 
     let mut out = String::with_capacity(input.len());
     for l in &lines[..start] {
@@ -262,7 +260,9 @@ mod tests {
         };
         let out = apply(TEMPLATE, &r);
         assert!(parses(&out), "rendered:\n{out}");
-        assert!(out.contains("\npost_create:\n  - SX_LARAVEL_DIR=www bash ~/.sessionx/scripts/laravel-herd/setup.sh"));
+        assert!(out.contains(
+            "\npost_create:\n  - SX_LARAVEL_DIR=www bash ~/.sessionx/scripts/laravel-herd/setup.sh"
+        ));
         assert!(out.contains("\npre_remove:\n  - SX_LARAVEL_DIR=www bash ~/.sessionx/scripts/laravel-herd/teardown.sh"));
         assert!(!out.contains("# post_create:"));
     }

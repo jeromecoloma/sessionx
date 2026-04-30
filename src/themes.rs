@@ -26,12 +26,12 @@ pub fn list() -> &'static [&'static str] {
 pub fn load(name: &str) -> Result<Theme> {
     match name {
         "tokyo-night" => Ok(tokyo_night()),
-        "catppuccin"  => Ok(catppuccin()),
-        "dracula"     => Ok(dracula()),
-        "gruvbox"     => Ok(gruvbox()),
-        "nord"        => Ok(nord()),
-        "rose-pine"   => Ok(rose_pine()),
-        "minimal"     => Ok(minimal()),
+        "catppuccin" => Ok(catppuccin()),
+        "dracula" => Ok(dracula()),
+        "gruvbox" => Ok(gruvbox()),
+        "nord" => Ok(nord()),
+        "rose-pine" => Ok(rose_pine()),
+        "minimal" => Ok(minimal()),
         other => Err(anyhow!(
             "unknown theme '{other}'. Available: {}",
             list().join(", ")
@@ -48,7 +48,11 @@ fn tokyo_night() -> Theme {
     let mut style = BTreeMap::new();
     s(&mut style, "status-style", "bg=#1a1b26,fg=#c0caf5");
     s(&mut style, "window-status-style", "bg=#1a1b26,fg=#7aa2f7");
-    s(&mut style, "window-status-current-style", "bg=#1a1b26,fg=#bb9af7,bold");
+    s(
+        &mut style,
+        "window-status-current-style",
+        "bg=#1a1b26,fg=#bb9af7,bold",
+    );
     s(&mut style, "pane-active-border-style", "fg=#7aa2f7");
     s(&mut style, "pane-border-style", "fg=#414868");
     s(&mut style, "message-style", "bg=#bb9af7,fg=#1a1b26,bold");
@@ -82,7 +86,11 @@ fn catppuccin() -> Theme {
     let mut style = BTreeMap::new();
     s(&mut style, "status-style", "bg=#1e1e2e,fg=#cdd6f4");
     s(&mut style, "window-status-style", "bg=#1e1e2e,fg=#9399b2");
-    s(&mut style, "window-status-current-style", "bg=#1e1e2e,fg=#89b4fa,bold");
+    s(
+        &mut style,
+        "window-status-current-style",
+        "bg=#1e1e2e,fg=#89b4fa,bold",
+    );
     s(&mut style, "pane-active-border-style", "fg=#89b4fa");
     s(&mut style, "pane-border-style", "fg=#45475a");
     s(&mut style, "message-style", "bg=#89b4fa,fg=#1e1e2e,bold");
@@ -113,7 +121,11 @@ fn dracula() -> Theme {
     let mut style = BTreeMap::new();
     s(&mut style, "status-style", "bg=#282a36,fg=#f8f8f2");
     s(&mut style, "window-status-style", "bg=#282a36,fg=#6272a4");
-    s(&mut style, "window-status-current-style", "bg=#282a36,fg=#bd93f9,bold");
+    s(
+        &mut style,
+        "window-status-current-style",
+        "bg=#282a36,fg=#bd93f9,bold",
+    );
     s(&mut style, "pane-active-border-style", "fg=#bd93f9");
     s(&mut style, "pane-border-style", "fg=#44475a");
     s(&mut style, "message-style", "bg=#ff79c6,fg=#282a36,bold");
@@ -143,7 +155,11 @@ fn gruvbox() -> Theme {
     let mut style = BTreeMap::new();
     s(&mut style, "status-style", "bg=#282828,fg=#ebdbb2");
     s(&mut style, "window-status-style", "bg=#282828,fg=#928374");
-    s(&mut style, "window-status-current-style", "bg=#282828,fg=#fabd2f,bold");
+    s(
+        &mut style,
+        "window-status-current-style",
+        "bg=#282828,fg=#fabd2f,bold",
+    );
     s(&mut style, "pane-active-border-style", "fg=#fabd2f");
     s(&mut style, "pane-border-style", "fg=#504945");
     s(&mut style, "message-style", "bg=#fabd2f,fg=#282828,bold");
@@ -173,7 +189,11 @@ fn nord() -> Theme {
     let mut style = BTreeMap::new();
     s(&mut style, "status-style", "bg=#2e3440,fg=#d8dee9");
     s(&mut style, "window-status-style", "bg=#2e3440,fg=#4c566a");
-    s(&mut style, "window-status-current-style", "bg=#2e3440,fg=#88c0d0,bold");
+    s(
+        &mut style,
+        "window-status-current-style",
+        "bg=#2e3440,fg=#88c0d0,bold",
+    );
     s(&mut style, "pane-active-border-style", "fg=#88c0d0");
     s(&mut style, "pane-border-style", "fg=#3b4252");
     s(&mut style, "message-style", "bg=#88c0d0,fg=#2e3440,bold");
@@ -203,7 +223,11 @@ fn rose_pine() -> Theme {
     let mut style = BTreeMap::new();
     s(&mut style, "status-style", "bg=#191724,fg=#e0def4");
     s(&mut style, "window-status-style", "bg=#191724,fg=#6e6a86");
-    s(&mut style, "window-status-current-style", "bg=#191724,fg=#ebbcba,bold");
+    s(
+        &mut style,
+        "window-status-current-style",
+        "bg=#191724,fg=#ebbcba,bold",
+    );
     s(&mut style, "pane-active-border-style", "fg=#ebbcba");
     s(&mut style, "pane-border-style", "fg=#26233a");
     s(&mut style, "message-style", "bg=#ebbcba,fg=#191724,bold");

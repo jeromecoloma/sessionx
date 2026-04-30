@@ -37,7 +37,11 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
         &loaded.project_root,
         handle,
         &session,
-        if loaded.worktree_mode() { Some(&work_cwd) } else { None },
+        if loaded.worktree_mode() {
+            Some(&work_cwd)
+        } else {
+            None
+        },
         branch.as_deref(),
     );
     env_vars.extend(status::icon_env(&loaded.config.status));
@@ -54,7 +58,11 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
 
     // 4. Tag the session so `sessionx open` / `ls --all` can find it cross-project.
     tmux::set_user_option(&session, "sessionx-managed", "1")?;
-    tmux::set_user_option(&session, "sessionx-project", &loaded.project_root.display().to_string())?;
+    tmux::set_user_option(
+        &session,
+        "sessionx-project",
+        &loaded.project_root.display().to_string(),
+    )?;
     tmux::set_user_option(&session, "sessionx-handle", handle)?;
 
     // 5. Status bar (per-session, scoped).
@@ -110,7 +118,10 @@ fn build_panes(window_id: &str, first_pane_id: &str, cwd: &Path, panes: &[PaneSp
     for p in panes.iter().skip(1) {
         let horizontal = matches!(p.split, Some(SplitDir::Horizontal));
         // Split off the most recently created pane (or the window if first split).
-        let target = pane_ids.last().cloned().unwrap_or_else(|| window_id.to_string());
+        let target = pane_ids
+            .last()
+            .cloned()
+            .unwrap_or_else(|| window_id.to_string());
         let new_pid = tmux::split_window(&target, cwd, horizontal, p.percentage, p.size)?;
         if let Some(cmd) = p.command.as_deref().filter(|s| !s.is_empty()) {
             tmux::send_keys(&new_pid, &agent::expand(cmd))?;

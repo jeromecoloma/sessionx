@@ -23,6 +23,10 @@ pub fn run(name: Option<&str>, names_only: bool) -> Result<()> {
     let candidates: Vec<&str> = managed.iter().map(|m| m.name.as_str()).collect();
     Err(anyhow!(
         "no managed session named '{name}'. Candidates: {}",
-        if candidates.is_empty() { "(none)".to_string() } else { candidates.join(", ") }
+        if candidates.is_empty() {
+            "(none)".to_string()
+        } else {
+            candidates.join(", ")
+        }
     ))
 }

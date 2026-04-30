@@ -61,7 +61,11 @@ pub fn run_install(id: &str) -> Result<()> {
 
 pub fn run_update() -> Result<()> {
     let dir = hooks_repo::ensure_cloned()?;
-    println!("up to date: {} @ {}", dir.display(), hooks_repo::pinned_ref());
+    println!(
+        "up to date: {} @ {}",
+        dir.display(),
+        hooks_repo::pinned_ref()
+    );
     Ok(())
 }
 

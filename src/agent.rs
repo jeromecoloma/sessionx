@@ -32,7 +32,10 @@ struct GlobalConfig {
 /// `~/Library/Application Support/`. Most CLI tools live under `~/.config`,
 /// matching how this is documented in the README.
 pub fn config_path() -> Option<PathBuf> {
-    let base = match std::env::var("XDG_CONFIG_HOME").ok().filter(|s| !s.is_empty()) {
+    let base = match std::env::var("XDG_CONFIG_HOME")
+        .ok()
+        .filter(|s| !s.is_empty())
+    {
         Some(s) => PathBuf::from(s),
         None => dirs::home_dir()?.join(".config"),
     };
@@ -50,11 +53,15 @@ fn legacy_config_path() -> Option<PathBuf> {
 /// when the legacy file doesn't exist. Idempotent. Public so cmd::config can
 /// trigger it explicitly when the user is touching the config directly.
 pub fn migrate_legacy_if_present() {
-    let Some(canonical) = config_path() else { return };
+    let Some(canonical) = config_path() else {
+        return;
+    };
     if canonical.exists() {
         return;
     }
-    let Some(legacy) = legacy_config_path() else { return };
+    let Some(legacy) = legacy_config_path() else {
+        return;
+    };
     if !legacy.exists() {
         return;
     }
@@ -72,8 +79,12 @@ pub fn migrate_legacy_if_present() {
 
 fn load_global() -> GlobalConfig {
     migrate_legacy_if_present();
-    let Some(p) = config_path() else { return GlobalConfig::default(); };
-    let Ok(s) = std::fs::read_to_string(&p) else { return GlobalConfig::default(); };
+    let Some(p) = config_path() else {
+        return GlobalConfig::default();
+    };
+    let Ok(s) = std::fs::read_to_string(&p) else {
+        return GlobalConfig::default();
+    };
     serde_yaml::from_str(&s).unwrap_or_default()
 }
 
@@ -109,7 +120,11 @@ fn rewrite_agent(input: &str, value: &str) -> String {
     let line_count = input.lines().count();
     for (i, line) in input.lines().enumerate() {
         let last = i + 1 == line_count;
-        if !wrote && line.trim_start().starts_with("agent:") && !line.starts_with(' ') && !line.starts_with('\t') {
+        if !wrote
+            && line.trim_start().starts_with("agent:")
+            && !line.starts_with(' ')
+            && !line.starts_with('\t')
+        {
             out.push_str(&format!("agent: {value}"));
             wrote = true;
         } else {

@@ -67,8 +67,7 @@ pub fn ensure_cloned() -> Result<PathBuf> {
         // Existing clone — make sure it's pointing at the requested ref.
         let cur = current_ref(&dir).unwrap_or_default();
         if cur != r#ref {
-            run_git(&dir, &["fetch", "--tags", "--quiet", "origin"])
-                .context("git fetch")?;
+            run_git(&dir, &["fetch", "--tags", "--quiet", "origin"]).context("git fetch")?;
             run_git(&dir, &["checkout", "--quiet", &r#ref]).context("git checkout")?;
         }
         return Ok(dir);
@@ -107,7 +106,13 @@ pub fn ensure_cloned() -> Result<PathBuf> {
 fn current_ref(dir: &Path) -> Result<String> {
     // Try tag first, fall back to commit.
     let out = Command::new("git")
-        .args(["-C", &dir.display().to_string(), "describe", "--tags", "--exact-match"])
+        .args([
+            "-C",
+            &dir.display().to_string(),
+            "describe",
+            "--tags",
+            "--exact-match",
+        ])
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .output()?;
@@ -135,10 +140,10 @@ fn run_git(dir: &Path, args: &[&str]) -> Result<()> {
 
 pub fn read_manifest(cache: &Path) -> Result<Manifest> {
     let path = cache.join("recipes.yaml");
-    let body = std::fs::read_to_string(&path)
-        .with_context(|| format!("reading {}", path.display()))?;
-    let m: Manifest = serde_yaml::from_str(&body)
-        .with_context(|| format!("parsing {}", path.display()))?;
+    let body =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
+    let m: Manifest =
+        serde_yaml::from_str(&body).with_context(|| format!("parsing {}", path.display()))?;
     Ok(m)
 }
 
@@ -374,8 +379,13 @@ recipes:
     fn resolve_script_path_strips_repo_prefix() {
         let target = std::path::Path::new("/x/scripts/laravel-herd");
         let cache = std::path::Path::new("/cache");
-        let p = resolve_script_path(target, cache, "laravel-herd", "recipes/laravel-herd/setup.sh")
-            .unwrap();
+        let p = resolve_script_path(
+            target,
+            cache,
+            "laravel-herd",
+            "recipes/laravel-herd/setup.sh",
+        )
+        .unwrap();
         assert_eq!(p, std::path::Path::new("/x/scripts/laravel-herd/setup.sh"));
     }
 

@@ -43,7 +43,10 @@ fn select_fzf(title: &str, items: &[String]) -> Result<Option<usize>> {
         .stdout(Stdio::piped())
         .spawn()?;
     {
-        let stdin = child.stdin.as_mut().ok_or_else(|| anyhow!("fzf: stdin unavailable"))?;
+        let stdin = child
+            .stdin
+            .as_mut()
+            .ok_or_else(|| anyhow!("fzf: stdin unavailable"))?;
         for item in items {
             writeln!(stdin, "{item}")?;
         }

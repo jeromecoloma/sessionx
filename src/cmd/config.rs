@@ -46,8 +46,8 @@ pub fn run_get(key: Option<&str>) -> Result<()> {
         eprintln!("(config not yet created — run `sessionx config` to edit)");
         return Ok(());
     }
-    let body = std::fs::read_to_string(&path)
-        .with_context(|| format!("reading {}", path.display()))?;
+    let body =
+        std::fs::read_to_string(&path).with_context(|| format!("reading {}", path.display()))?;
     match key {
         None => {
             print!("{body}");

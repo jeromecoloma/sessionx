@@ -12,7 +12,10 @@ pub fn run(handle: &str, force: bool) -> Result<()> {
         None
     };
     let branch = if loaded.worktree_mode() {
-        Some(worktree::handle_to_branch(handle, loaded.config.worktree_naming))
+        Some(worktree::handle_to_branch(
+            handle,
+            loaded.config.worktree_naming,
+        ))
     } else {
         None
     };

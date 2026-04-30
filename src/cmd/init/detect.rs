@@ -336,8 +336,14 @@ mod tests {
         fs::write(d.join("www/artisan"), "").unwrap();
         let det = detect(&d);
         let yaml = windows_yaml_for(&det, &d).unwrap();
-        assert!(!yaml.contains("php artisan serve"), "yaml should not contain serve:\n{yaml}");
-        assert!(yaml.contains("${EDITOR:-vi} ."), "edit should target root:\n{yaml}");
+        assert!(
+            !yaml.contains("php artisan serve"),
+            "yaml should not contain serve:\n{yaml}"
+        );
+        assert!(
+            yaml.contains("${EDITOR:-vi} ."),
+            "edit should target root:\n{yaml}"
+        );
         assert!(!yaml.contains("${EDITOR:-vi} www"));
     }
 

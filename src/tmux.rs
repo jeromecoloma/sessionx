@@ -45,15 +45,30 @@ pub fn current_session() -> Result<Option<String>> {
     }
     let out = run(&["display-message", "-p", "#S"])?;
     let s = out.trim().to_string();
-    if s.is_empty() { Ok(None) } else { Ok(Some(s)) }
+    if s.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(s))
+    }
 }
 
 /// Returns `(window_id, pane_id)` for the session's first window/pane.
-pub fn new_session(name: &str, cwd: &Path, first_window_name: Option<&str>) -> Result<(String, String)> {
+pub fn new_session(
+    name: &str,
+    cwd: &Path,
+    first_window_name: Option<&str>,
+) -> Result<(String, String)> {
     let cwd_s = cwd.to_string_lossy().to_string();
     let mut args = vec![
-        "new-session", "-d", "-s", name, "-c", cwd_s.as_str(),
-        "-P", "-F", "#{window_id} #{pane_id}",
+        "new-session",
+        "-d",
+        "-s",
+        name,
+        "-c",
+        cwd_s.as_str(),
+        "-P",
+        "-F",
+        "#{window_id} #{pane_id}",
     ];
     if let Some(w) = first_window_name {
         args.push("-n");
@@ -67,8 +82,14 @@ pub fn new_session(name: &str, cwd: &Path, first_window_name: Option<&str>) -> R
 pub fn new_window(session: &str, name: Option<&str>, cwd: &Path) -> Result<(String, String)> {
     let cwd_s = cwd.to_string_lossy().to_string();
     let mut args = vec![
-        "new-window", "-t", session, "-c", cwd_s.as_str(),
-        "-P", "-F", "#{window_id} #{pane_id}",
+        "new-window",
+        "-t",
+        session,
+        "-c",
+        cwd_s.as_str(),
+        "-P",
+        "-F",
+        "#{window_id} #{pane_id}",
     ];
     if let Some(n) = name {
         args.push("-n");
@@ -79,10 +100,19 @@ pub fn new_window(session: &str, name: Option<&str>, cwd: &Path) -> Result<(Stri
 }
 
 fn parse_two(out: &str) -> Result<(String, String)> {
-    let line = out.lines().next().ok_or_else(|| anyhow!("tmux: empty output"))?;
+    let line = out
+        .lines()
+        .next()
+        .ok_or_else(|| anyhow!("tmux: empty output"))?;
     let mut it = line.split_whitespace();
-    let a = it.next().ok_or_else(|| anyhow!("tmux: bad output: {line}"))?.to_string();
-    let b = it.next().ok_or_else(|| anyhow!("tmux: bad output: {line}"))?.to_string();
+    let a = it
+        .next()
+        .ok_or_else(|| anyhow!("tmux: bad output: {line}"))?
+        .to_string();
+    let b = it
+        .next()
+        .ok_or_else(|| anyhow!("tmux: bad output: {line}"))?
+        .to_string();
     Ok((a, b))
 }
 
@@ -98,8 +128,14 @@ pub fn split_window(
 ) -> Result<String> {
     let cwd_s = cwd.to_string_lossy().to_string();
     let mut args = vec![
-        "split-window", "-t", target, "-c", cwd_s.as_str(),
-        "-P", "-F", "#{pane_id}",
+        "split-window",
+        "-t",
+        target,
+        "-c",
+        cwd_s.as_str(),
+        "-P",
+        "-F",
+        "#{pane_id}",
     ];
     if horizontal {
         args.push("-h");
@@ -196,7 +232,11 @@ pub fn list_managed_sessions() -> Result<Vec<ManagedSession>> {
         let project = it.next().unwrap_or("").to_string();
         let handle = it.next().unwrap_or("").to_string();
         if managed == "1" && !name.is_empty() {
-            v.push(ManagedSession { name, project, handle });
+            v.push(ManagedSession {
+                name,
+                project,
+                handle,
+            });
         }
     }
     Ok(v)

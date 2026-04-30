@@ -89,7 +89,12 @@ pub fn create(loaded: &Loaded, handle: &str, base: Option<&str>) -> Result<PathB
 fn branch_exists(repo: &Path, branch: &str) -> bool {
     Command::new("git")
         .current_dir(repo)
-        .args(["show-ref", "--verify", "--quiet", &format!("refs/heads/{branch}")])
+        .args([
+            "show-ref",
+            "--verify",
+            "--quiet",
+            &format!("refs/heads/{branch}"),
+        ])
         .status()
         .map(|s| s.success())
         .unwrap_or(false)
@@ -127,7 +132,8 @@ fn apply_files(loaded: &Loaded, dest: &Path) -> Result<()> {
         if let Some(parent) = dst.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::copy(&src, &dst).with_context(|| format!("copy {} → {}", src.display(), dst.display()))?;
+        std::fs::copy(&src, &dst)
+            .with_context(|| format!("copy {} → {}", src.display(), dst.display()))?;
     }
     for rel in &spec.symlink {
         let src = loaded.project_root.join(rel);

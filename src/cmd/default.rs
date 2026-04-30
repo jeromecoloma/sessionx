@@ -101,6 +101,12 @@ fn plain_tmux(cwd: &Path) -> Result<()> {
 
 fn sanitize(s: &str) -> String {
     s.chars()
-        .map(|c| if matches!(c, '.' | ':' | ' ' | '\t') { '_' } else { c })
+        .map(|c| {
+            if matches!(c, '.' | ':' | ' ' | '\t') {
+                '_'
+            } else {
+                c
+            }
+        })
         .collect()
 }

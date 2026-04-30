@@ -300,16 +300,18 @@ fn prompt_layout(kind: ProjectKind, allow_back: bool) -> Result<Outcome<bool>> {
         format!("yes — use suggested {} layout", kind.label()),
         "no — use the generic 2-window default".to_string(),
     ];
-    Ok(match pick(
-        &format!("detected {} project, use suggested layout?", kind.label()),
-        items,
-        allow_back,
-    )? {
-        Outcome::Chose(0) => Outcome::Chose(true),
-        Outcome::Chose(_) => Outcome::Chose(false),
-        Outcome::Back => Outcome::Back,
-        Outcome::Cancel => Outcome::Cancel,
-    })
+    Ok(
+        match pick(
+            &format!("detected {} project, use suggested layout?", kind.label()),
+            items,
+            allow_back,
+        )? {
+            Outcome::Chose(0) => Outcome::Chose(true),
+            Outcome::Chose(_) => Outcome::Chose(false),
+            Outcome::Back => Outcome::Back,
+            Outcome::Cancel => Outcome::Cancel,
+        },
+    )
 }
 
 /// One-time global agent preference. `Ok(Outcome::Chose(None))` means "skip,
@@ -323,29 +325,28 @@ fn prompt_agent(allow_back: bool) -> Result<Outcome<Option<String>>> {
     let custom_idx = presets.len();
     let skip_idx = custom_idx + 1;
 
-    Ok(match pick(
-        "default AI agent for the `agent` window (saved to ~/.config/sessionx/config.yaml)",
-        items,
-        allow_back,
-    )? {
-        Outcome::Chose(i) if i == skip_idx => Outcome::Chose(None),
-        Outcome::Chose(i) if i == custom_idx => {
-            match picker::prompt("agent command (e.g. \"claude\", \"codex --interactive\")")? {
-                Some(s) => Outcome::Chose(Some(s)),
-                None => Outcome::Chose(None),
+    Ok(
+        match pick(
+            "default AI agent for the `agent` window (saved to ~/.config/sessionx/config.yaml)",
+            items,
+            allow_back,
+        )? {
+            Outcome::Chose(i) if i == skip_idx => Outcome::Chose(None),
+            Outcome::Chose(i) if i == custom_idx => {
+                match picker::prompt("agent command (e.g. \"claude\", \"codex --interactive\")")? {
+                    Some(s) => Outcome::Chose(Some(s)),
+                    None => Outcome::Chose(None),
+                }
             }
-        }
-        Outcome::Chose(i) => Outcome::Chose(Some(presets[i].to_string())),
-        Outcome::Back => Outcome::Back,
-        Outcome::Cancel => Outcome::Cancel,
-    })
+            Outcome::Chose(i) => Outcome::Chose(Some(presets[i].to_string())),
+            Outcome::Back => Outcome::Back,
+            Outcome::Cancel => Outcome::Cancel,
+        },
+    )
 }
 
 /// Recipe options: `None` (no hooks) or one of the available recipes.
-fn prompt_recipe(
-    recipes: &[RecipeMeta],
-    allow_back: bool,
-) -> Result<Outcome<Option<RecipeMeta>>> {
+fn prompt_recipe(recipes: &[RecipeMeta], allow_back: bool) -> Result<Outcome<Option<RecipeMeta>>> {
     let mut items = vec!["none — no hook recipe".to_string()];
     for r in recipes {
         items.push(format!("{:<16} — {}", r.id, r.description));

@@ -97,7 +97,14 @@ pub fn run(opts: InitOpts) -> Result<()> {
 
     let rendered = render::apply(TEMPLATE, &resolved);
     std::fs::write(&path, &rendered)?;
-    print_summary(&path, &cwd, &resolved, &det, interactive, installed_recipe.as_ref());
+    print_summary(
+        &path,
+        &cwd,
+        &resolved,
+        &det,
+        interactive,
+        installed_recipe.as_ref(),
+    );
     Ok(())
 }
 
@@ -166,10 +173,7 @@ fn handle_existing(path: &Path, opts: &InitOpts) -> Result<()> {
         "Edit existing file in $EDITOR".to_string(),
         "Cancel".to_string(),
     ];
-    let Some(idx) = crate::picker::select(
-        &format!("{} exists", path.display()),
-        &items,
-    )? else {
+    let Some(idx) = crate::picker::select(&format!("{} exists", path.display()), &items)? else {
         return Err(anyhow!("cancelled"));
     };
     match idx {
