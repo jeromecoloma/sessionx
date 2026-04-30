@@ -13,6 +13,8 @@ _sessionx() {
         'completions:print shell completion script'
         'themes:list built-in status-bar themes'
         'theme:manage project theme (set/preview/list)'
+        'hooks:manage stack-specific hook recipes (list/info/install/update/repo)'
+        'config:manage global config (~/.config/sessionx/config.yaml)'
     )
 
     local context curcontext="$curcontext" state line ret=1
@@ -83,6 +85,60 @@ _sessionx() {
                         '--names-only[print only handles]' \
                         '--all[list all managed sessions globally]' && ret=0
                     ;;
+                hooks)
+                    _arguments -C \
+                        '1: :->hookarg1' \
+                        '*:: :->hookargs' && ret=0
+                    case $state in
+                        hookarg1)
+                            local -a hook_actions
+                            hook_actions=(
+                                'list:show available recipes'
+                                'info:describe a recipe'
+                                'install:install a recipe to ~/.sessionx/scripts/<id>/'
+                                'update:refresh the cache'
+                                'repo:print repo URL + ref + cache path'
+                            )
+                            _describe -t actions 'hooks action' hook_actions && ret=0
+                            ;;
+                        hookargs)
+                            case $words[1] in
+                                info|install)
+                                    _arguments \
+                                        '1:recipe:_sessionx_recipes' && ret=0
+                                    ;;
+                            esac
+                            ;;
+                    esac
+                    ;;
+                config)
+                    _arguments -C \
+                        '1: :->cfgarg1' \
+                        '*:: :->cfgargs' && ret=0
+                    case $state in
+                        cfgarg1)
+                            local -a cfg_actions
+                            cfg_actions=(
+                                'path:print config file path'
+                                'get:dump config or read a key'
+                                'set:write a key=value'
+                            )
+                            _describe -t actions 'config action' cfg_actions && ret=0
+                            ;;
+                        cfgargs)
+                            case $words[1] in
+                                get)
+                                    _values 'key' agent && ret=0
+                                    ;;
+                                set)
+                                    _arguments \
+                                        '1:key:(agent)' \
+                                        '2:value:' && ret=0
+                                    ;;
+                            esac
+                            ;;
+                    esac
+                    ;;
             esac
             ;;
     esac
@@ -102,6 +158,15 @@ _sessionx_managed() {
     h=(${(f)"$(sessionx open --names-only 2>/dev/null)"})
     if (( ${#h} )); then
         _describe -t managed 'managed session' h
+    fi
+}
+
+_sessionx_recipes() {
+    local -a h
+    # Lazy: parse `sessionx hooks list` output (lines look like `  laravel-herd  [php]  ...`).
+    h=(${(f)"$(sessionx hooks list 2>/dev/null | awk '/^  [a-z]/{print $1}')"})
+    if (( ${#h} )); then
+        _describe -t recipes 'recipe' h
     fi
 }
 

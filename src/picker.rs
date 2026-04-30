@@ -63,3 +63,30 @@ fn select_inquire(title: &str, items: &[String]) -> Result<Option<usize>> {
         Err(_) => Ok(None),
     }
 }
+
+/// Prompt the user for free-text input.
+/// Returns `Ok(None)` if cancelled (esc/ctrl+c), no TTY, or input is blank.
+pub fn prompt(title: &str) -> Result<Option<String>> {
+    if !is_tty() {
+        return Ok(None);
+    }
+    let mut p = inquire::Text::new(title);
+    if let Some(validator) = nonblank_validator() {
+        p = p.with_validator(validator);
+    }
+    match p.prompt() {
+        Ok(s) => {
+            let s = s.trim().to_string();
+            if s.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(s))
+            }
+        }
+        Err(_) => Ok(None),
+    }
+}
+
+fn nonblank_validator() -> Option<inquire::validator::ValueRequiredValidator> {
+    Some(inquire::validator::ValueRequiredValidator::default())
+}

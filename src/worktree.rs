@@ -55,15 +55,44 @@ pub fn create(loaded: &Loaded, handle: &str, base: Option<&str>) -> Result<PathB
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
+    // Prune stale registrations — handles the case where a worktree dir was
+    // removed manually (e.g. `rm -rf`) without `git worktree remove`, which
+    // would otherwise make `add` fail with "missing but already registered".
+    let _ = git(&loaded.project_root, &["worktree", "prune"]);
+
     let branch = handle_to_branch(handle, loaded.config.worktree_naming);
     let path_s = path.to_string_lossy().to_string();
-    let mut args = vec!["worktree", "add", "-b", &branch, &path_s];
-    if let Some(b) = base {
-        args.push(b);
-    }
+
+    // If the branch already exists, check it out into the worktree as-is.
+    // Otherwise create it (optionally based on `base`).
+    let args: Vec<&str> = if branch_exists(&loaded.project_root, &branch) {
+        if base.is_some() {
+            return Err(anyhow!(
+                "branch '{branch}' already exists; refusing to use --base (would be ignored). \
+                 Pick a new handle, or omit --base."
+            ));
+        }
+        vec!["worktree", "add", &path_s, &branch]
+    } else {
+        let mut a = vec!["worktree", "add", "-b", &branch, &path_s];
+        if let Some(b) = base {
+            a.push(b);
+        }
+        a
+    };
+
     git(&loaded.project_root, &args)?;
     apply_files(loaded, &path)?;
     Ok(path)
+}
+
+fn branch_exists(repo: &Path, branch: &str) -> bool {
+    Command::new("git")
+        .current_dir(repo)
+        .args(["show-ref", "--verify", "--quiet", &format!("refs/heads/{branch}")])
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false)
 }
 
 pub fn remove(loaded: &Loaded, handle: &str, force: bool) -> Result<()> {

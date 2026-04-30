@@ -4,7 +4,7 @@ _sessionx() {
     local cur prev words cword
     _init_completion || return
 
-    local commands="init edit add ls open rm completions themes theme -h --help -V --version -v --verbose"
+    local commands="init edit add ls open rm completions themes theme hooks config -h --help -V --version -v --verbose"
     local cmd=""
     local i
     for ((i=1; i < cword; i++)); do
@@ -44,6 +44,46 @@ _sessionx() {
             ;;
         completions)
             COMPREPLY=( $(compgen -W "bash zsh fish" -- "$cur") )
+            ;;
+        hooks)
+            local sub=""
+            local j
+            for ((j=i+1; j < cword; j++)); do
+                case "${words[j]}" in
+                    -*) ;;
+                    *) sub="${words[j]}"; break ;;
+                esac
+            done
+            if [[ -z "$sub" ]]; then
+                COMPREPLY=( $(compgen -W "list info install update repo" -- "$cur") )
+            else
+                case "$sub" in
+                    info|install)
+                        local recipes
+                        recipes="$(sessionx hooks list 2>/dev/null | awk '/^  [a-z]/{print $1}')"
+                        COMPREPLY=( $(compgen -W "$recipes" -- "$cur") )
+                        ;;
+                esac
+            fi
+            ;;
+        config)
+            local sub=""
+            local j
+            for ((j=i+1; j < cword; j++)); do
+                case "${words[j]}" in
+                    -*) ;;
+                    *) sub="${words[j]}"; break ;;
+                esac
+            done
+            if [[ -z "$sub" ]]; then
+                COMPREPLY=( $(compgen -W "path get set" -- "$cur") )
+            else
+                case "$sub" in
+                    get|set)
+                        COMPREPLY=( $(compgen -W "agent" -- "$cur") )
+                        ;;
+                esac
+            fi
             ;;
         theme)
             local sub=""

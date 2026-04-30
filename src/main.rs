@@ -1,9 +1,11 @@
+mod agent;
 mod config;
 mod tmux;
 mod status;
 mod themes;
 mod worktree;
 mod hooks;
+mod hooks_repo;
 mod cmd;
 mod picker;
 
@@ -22,8 +24,28 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Cmd {
-    /// Write a starter .sessionx.yaml in the current directory
-    Init,
+    /// Write a starter .sessionx.yaml in the current directory.
+    ///
+    /// Runs an interactive wizard when stdin/stdout is a TTY (mode, worktree,
+    /// theme, project-aware layout). Falls back to the static template under
+    /// non-TTY (CI/pipes) or when --yes is given.
+    Init {
+        /// Skip prompts; use defaults (or detected values).
+        #[arg(long)]
+        yes: bool,
+        /// Overwrite an existing .sessionx.yaml after backing it up to .sessionx.yaml.bak.
+        #[arg(long)]
+        force: bool,
+        /// Pin the status-bar theme without prompting.
+        #[arg(long)]
+        theme: Option<String>,
+        /// Pin mode without prompting: session | window.
+        #[arg(long)]
+        mode: Option<String>,
+        /// Enable worktree mode with the given dir (e.g. --worktree .worktrees).
+        #[arg(long)]
+        worktree: Option<String>,
+    },
     /// Open .sessionx.yaml in $VISUAL/$EDITOR
     Edit,
     /// Create (or attach to) a session. Worktree-mode also creates a git worktree.
@@ -63,6 +85,27 @@ enum Cmd {
     },
     /// List built-in status-bar themes
     Themes,
+    /// Manage the global config (`~/.config/sessionx/config.yaml`).
+    ///
+    /// No args → open in $VISUAL/$EDITOR. Use `path` to print location,
+    /// `get [key]` to read, `set <key> <value>` to write.
+    Config {
+        /// `path`, `get`, `set`, or omit to open in editor.
+        arg: Option<String>,
+        /// Key for `get` / `set`.
+        key: Option<String>,
+        /// Value for `set`.
+        value: Option<String>,
+    },
+    /// Manage stack-specific hook recipes (sessionx-hooks repo).
+    ///
+    /// No args → list recipes. Use `info`/`install`/`update`/`repo` for control.
+    Hooks {
+        /// `list` (default), `info`, `install`, `update`, or `repo`.
+        arg: Option<String>,
+        /// Recipe id for `info` / `install`.
+        id: Option<String>,
+    },
     /// Manage the project's status-bar theme.
     ///
     /// No args → list themes. Bare theme name (e.g. `sessionx theme dracula`) is
@@ -89,7 +132,9 @@ fn main() -> Result<()> {
     }
     match cli.cmd {
         None => cmd::default::run(),
-        Some(Cmd::Init) => cmd::init::run(),
+        Some(Cmd::Init { yes, force, theme, mode, worktree }) => {
+            cmd::init::run(cmd::init::InitOpts { yes, force, theme, mode, worktree })
+        }
         Some(Cmd::Edit) => cmd::edit::run(),
         Some(Cmd::Add { name, base, no_attach }) => cmd::add::run(&name, base.as_deref(), !no_attach),
         Some(Cmd::Ls { names_only, all }) => cmd::ls::run(names_only, all),
@@ -101,6 +146,39 @@ fn main() -> Result<()> {
                 println!("{t}");
             }
             Ok(())
+        }
+        Some(Cmd::Config { arg, key, value }) => {
+            match arg.as_deref() {
+                None => cmd::config::run_edit(),
+                Some("path") => cmd::config::run_path(),
+                Some("get") => cmd::config::run_get(key.as_deref()),
+                Some("set") => {
+                    let k = key.ok_or_else(|| anyhow!("config set: missing <key>"))?;
+                    let v = value.ok_or_else(|| anyhow!("config set: missing <value>"))?;
+                    cmd::config::run_set(&k, &v)
+                }
+                Some(other) => Err(anyhow!(
+                    "unknown config subcommand '{other}' (try path|get|set or no arg)"
+                )),
+            }
+        }
+        Some(Cmd::Hooks { arg, id }) => {
+            match arg.as_deref() {
+                None | Some("list") => cmd::hooks::run_list(),
+                Some("info") => {
+                    let id = id.ok_or_else(|| anyhow!("hooks info: missing <id>"))?;
+                    cmd::hooks::run_info(&id)
+                }
+                Some("install") => {
+                    let id = id.ok_or_else(|| anyhow!("hooks install: missing <id>"))?;
+                    cmd::hooks::run_install(&id)
+                }
+                Some("update") => cmd::hooks::run_update(),
+                Some("repo") => cmd::hooks::run_repo(),
+                Some(other) => Err(anyhow!(
+                    "unknown hooks subcommand '{other}' (try list|info|install|update|repo)"
+                )),
+            }
         }
         Some(Cmd::Theme { arg, name, no_apply, session }) => {
             match arg.as_deref() {

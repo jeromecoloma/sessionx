@@ -8,6 +8,7 @@ const DEFAULT_HANDLE: &str = "main";
 
 enum Action {
     Attach,
+    AttachWorktree,
     Init,
     Open(String),
     PlainTmux,
@@ -28,9 +29,14 @@ pub fn run() -> Result<()> {
     let mut labels: Vec<String> = vec![];
     let mut actions: Vec<Action> = vec![];
 
-    if loaded.is_some() {
-        labels.push(format!("Attach/create project session ({DEFAULT_HANDLE})"));
-        actions.push(Action::Attach);
+    if let Some(l) = &loaded {
+        if l.worktree_mode() {
+            labels.push("Add new worktree session…".to_string());
+            actions.push(Action::AttachWorktree);
+        } else {
+            labels.push(format!("Attach/create project session ({DEFAULT_HANDLE})"));
+            actions.push(Action::Attach);
+        }
     } else if in_git {
         labels.push("Init .sessionx.yaml here".to_string());
         actions.push(Action::Init);
@@ -53,7 +59,13 @@ pub fn run() -> Result<()> {
 
     match &actions[idx] {
         Action::Attach => cmd::add::run(DEFAULT_HANDLE, None, true),
-        Action::Init => cmd::init::run(),
+        Action::AttachWorktree => {
+            let Some(handle) = picker::prompt("worktree handle (e.g. feat-x)")? else {
+                return Ok(());
+            };
+            cmd::add::run(&handle, None, true)
+        }
+        Action::Init => cmd::init::run(cmd::init::InitOpts::default()),
         Action::Open(name) => cmd::open::run(Some(name), false),
         Action::PlainTmux => plain_tmux(&cwd),
         Action::Quit => Ok(()),

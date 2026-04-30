@@ -21,9 +21,15 @@ mode: session
 # Layout — pick ONE of `windows:` or `panes:`
 #-------------------------------------------------------------------------------
 windows:
-  - name: shell
+  # First window is for your AI agent. The `<agent>` placeholder is
+  # substituted at session-build time. Resolution order:
+  #   1. SX_AGENT env var (e.g. `SX_AGENT=codex sessionx add foo`)
+  #   2. `agent:` field in ~/.config/sessionx/config.yaml
+  #   3. Falls back to `exec $SHELL` — sessionx will NOT pick an agent for you.
+  #      Set one via `sessionx init --force` or by editing the config file.
+  - name: agent
     panes:
-      - command: exec $SHELL
+      - command: <agent>
         focus: true
   - name: edit
     panes:

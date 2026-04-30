@@ -1,6 +1,8 @@
 pub mod add;
+pub mod config;
 pub mod default;
 pub mod edit;
+pub mod hooks;
 pub mod init;
 pub mod ls;
 pub mod open;

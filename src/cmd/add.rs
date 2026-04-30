@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use std::path::Path;
 
 use crate::config::{self, Config, Loaded, PaneSpec, SplitDir};
-use crate::{hooks, status, tmux, worktree};
+use crate::{agent, hooks, status, tmux, worktree};
 
 pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
     let loaded = config::find_and_load()?;
@@ -105,7 +105,7 @@ fn build_panes(window_id: &str, first_pane_id: &str, cwd: &Path, panes: &[PaneSp
     }
     let mut pane_ids: Vec<String> = vec![first_pane_id.to_string()];
     if let Some(cmd) = panes[0].command.as_deref().filter(|s| !s.is_empty()) {
-        tmux::send_keys(&pane_ids[0], cmd)?;
+        tmux::send_keys(&pane_ids[0], &agent::expand(cmd))?;
     }
     for p in panes.iter().skip(1) {
         let horizontal = matches!(p.split, Some(SplitDir::Horizontal));
@@ -113,7 +113,7 @@ fn build_panes(window_id: &str, first_pane_id: &str, cwd: &Path, panes: &[PaneSp
         let target = pane_ids.last().cloned().unwrap_or_else(|| window_id.to_string());
         let new_pid = tmux::split_window(&target, cwd, horizontal, p.percentage, p.size)?;
         if let Some(cmd) = p.command.as_deref().filter(|s| !s.is_empty()) {
-            tmux::send_keys(&new_pid, cmd)?;
+            tmux::send_keys(&new_pid, &agent::expand(cmd))?;
         }
         pane_ids.push(new_pid);
     }

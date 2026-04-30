@@ -46,7 +46,7 @@ export PATH="$HOME/.cargo/bin:$PATH"   # if not already
 
 ```sh
 cd my-project
-sessionx init                  # writes .sessionx.yaml
+sessionx init                  # interactive wizard (or --yes for non-interactive)
 sessionx add work              # creates session "<project>-work" and attaches
 sessionx ls
 sessionx rm work
@@ -134,11 +134,26 @@ Custom `segments` are materialized into `~/.sessionx/segments/<name>.sh` and ref
 
 These mirror workmux's `WM_*` vars — porting an existing workmux script is mostly `sed s/WM_/SX_/`.
 
+## Agent placeholder
+
+Pane commands may use `<agent>` as a placeholder for your AI CLI of choice. It's substituted at session-build time. Resolution order:
+
+1. `SX_AGENT` env var (e.g. `SX_AGENT=codex sessionx add foo`).
+2. `agent:` field in `~/.config/sessionx/config.yaml`:
+   ```yaml
+   agent: claude    # or codex, aider, gh-copilot, etc.
+   ```
+3. Fallback: `exec $SHELL`. sessionx **does not** pick an agent for you — if nothing is configured, the agent window opens a plain shell. Configure one explicitly via `sessionx init --force` (interactive picker) or by editing `~/.config/sessionx/config.yaml`.
+
+The default `.sessionx.yaml` template ships an `agent` window with `command: <agent>` so once you set the global `agent:` value, every fresh session drops you straight into your AI CLI.
+
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `sessionx init` | Write a starter `.sessionx.yaml`. |
+| `sessionx init` | Write a starter `.sessionx.yaml`. Interactive when run on a TTY: prompts for mode, worktree, theme, project-aware layout (Rust/Node/PHP/Python detection), and an optional hook recipe from [sessionx-hooks](https://github.com/jeromecoloma/sessionx-hooks). Non-interactive flags: `--yes`, `--force`, `--theme <name>`, `--mode session\|window`, `--worktree <dir>`. Falls back to the static template under non-TTY (CI/pipes). |
+| `sessionx hooks [list\|info\|install\|update\|repo] [<id>]` | Manage stack-specific hook recipes from the [`sessionx-hooks`](https://github.com/jeromecoloma/sessionx-hooks) repo. `list` shows what's available; `install <id>` drops scripts into `~/.sessionx/scripts/<id>/`. `sessionx init` calls `install` for you when you opt into a recipe. Override the source with `SX_HOOKS_REPO` / `SX_HOOKS_REF`. |
+| `sessionx config [path\|get\|set <k> <v>]` | Manage the global config (`~/.config/sessionx/config.yaml`). No args opens it in `$VISUAL`/`$EDITOR` (creates a starter file if missing). `path` prints the file location; `get [agent]` reads; `set agent <name>` writes. |
 | `sessionx edit` | Open `.sessionx.yaml` in `$VISUAL`/`$EDITOR`. |
 | `sessionx add <name> [--base <ref>] [--no-attach]` | Create + attach. |
 | `sessionx ls [--all] [--names-only]` | List sessions for this project; `--all` lists every managed session globally. |

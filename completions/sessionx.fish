@@ -49,6 +49,8 @@ complete -c sessionx -n __sessionx_no_subcmd -a rm          -d 'tear down a sess
 complete -c sessionx -n __sessionx_no_subcmd -a completions -d 'print completion script'
 complete -c sessionx -n __sessionx_no_subcmd -a themes      -d 'list built-in themes'
 complete -c sessionx -n __sessionx_no_subcmd -a theme       -d 'manage project theme (set/preview/list)'
+complete -c sessionx -n __sessionx_no_subcmd -a hooks       -d 'manage hook recipes (list/info/install/update/repo)'
+complete -c sessionx -n __sessionx_no_subcmd -a config      -d 'manage global config (~/.config/sessionx/config.yaml)'
 
 complete -c sessionx -s v -l verbose -d 'print tmux/git commands'
 
@@ -111,3 +113,97 @@ complete -c sessionx -n '__sessionx_theme_action set'     -l no-apply -d 'write 
 complete -c sessionx -n '__sessionx_theme_action set'     -l session  -d 'target session' -x
 complete -c sessionx -n '__sessionx_theme_action preview' -a '(__sessionx_themes)'
 complete -c sessionx -n '__sessionx_theme_action preview' -l session  -d 'target session' -x
+
+# hooks subcommand
+function __sessionx_recipes
+    sessionx hooks list 2>/dev/null | awk '/^  [a-z]/{print $1}'
+end
+
+function __sessionx_hooks_no_action
+    set -l cmd (commandline -opc)
+    set -l seen 0
+    for c in $cmd
+        if test $seen -eq 1
+            switch $c
+                case list info install update repo
+                    return 1
+                case '-*'
+                case '*'
+                    return 1
+            end
+        end
+        if test "$c" = hooks
+            set seen 1
+        end
+    end
+    test $seen -eq 1
+end
+
+function __sessionx_hooks_action
+    set -l cmd (commandline -opc)
+    set -l seen 0
+    for c in $cmd
+        if test $seen -eq 1
+            if test "$c" = "$argv[1]"
+                return 0
+            end
+            return 1
+        end
+        if test "$c" = hooks
+            set seen 1
+        end
+    end
+    return 1
+end
+
+complete -c sessionx -n __sessionx_hooks_no_action -a list    -d 'show available recipes'
+complete -c sessionx -n __sessionx_hooks_no_action -a info    -d 'describe a recipe'
+complete -c sessionx -n __sessionx_hooks_no_action -a install -d 'install a recipe'
+complete -c sessionx -n __sessionx_hooks_no_action -a update  -d 'refresh the cache'
+complete -c sessionx -n __sessionx_hooks_no_action -a repo    -d 'print repo URL/ref/cache path'
+complete -c sessionx -n '__sessionx_hooks_action info'    -a '(__sessionx_recipes)'
+complete -c sessionx -n '__sessionx_hooks_action install' -a '(__sessionx_recipes)'
+
+# config subcommand
+function __sessionx_config_no_action
+    set -l cmd (commandline -opc)
+    set -l seen 0
+    for c in $cmd
+        if test $seen -eq 1
+            switch $c
+                case path get set
+                    return 1
+                case '-*'
+                case '*'
+                    return 1
+            end
+        end
+        if test "$c" = config
+            set seen 1
+        end
+    end
+    test $seen -eq 1
+end
+
+function __sessionx_config_action
+    set -l cmd (commandline -opc)
+    set -l seen 0
+    for c in $cmd
+        if test $seen -eq 1
+            if test "$c" = "$argv[1]"
+                return 0
+            end
+            return 1
+        end
+        if test "$c" = config
+            set seen 1
+        end
+    end
+    return 1
+end
+
+complete -c sessionx -n __sessionx_config_no_action -a path -d 'print config file path'
+complete -c sessionx -n __sessionx_config_no_action -a get  -d 'dump config or read a key'
+complete -c sessionx -n __sessionx_config_no_action -a set  -d 'write a key=value'
+complete -c sessionx -n '__sessionx_config_action get' -a 'agent'
+complete -c sessionx -n '__sessionx_config_action set' -a 'agent'
