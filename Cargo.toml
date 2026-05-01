@@ -21,7 +21,7 @@ clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
 anyhow = "1"
-dirs = "5"
+dirs = "6"
 shell-words = "1"
 inquire = "0.7"
 
