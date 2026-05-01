@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-05-01
+
 ### Added
 - Interactive `sessionx init` wizard with detected-stack defaults.
 - Hooks fetcher and `sessionx config` command.
@@ -51,5 +53,6 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.1
 [0.1.0]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.0
