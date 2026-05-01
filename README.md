@@ -1,6 +1,8 @@
 # sessionx
 
 [![CI](https://github.com/jeromecoloma/sessionx/actions/workflows/ci.yml/badge.svg)](https://github.com/jeromecoloma/sessionx/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/sessionx.svg)](https://crates.io/crates/sessionx)
+[![downloads](https://img.shields.io/crates/d/sessionx.svg)](https://crates.io/crates/sessionx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![MSRV](https://img.shields.io/badge/MSRV-1.75-blue.svg)](Cargo.toml)
 
@@ -10,37 +12,45 @@ A small tmux session manager. Sits between [tmuxp](https://tmuxp.git-pull.com/) 
 
 ## Requirements
 
-- **Rust toolchain** (stable, 1.75+) — install via [rustup](https://rustup.rs):
-  ```sh
-  brew install rustup        # macOS, if you don't have it
-  rustup default stable
-  ```
-  Homebrew installs `rustup` keg-only, so `cargo`/`rustc` aren't on `PATH` by default. Add the shim dir:
-  ```sh
-  echo 'export PATH="/opt/homebrew/opt/rustup/bin:$PATH"' >> ~/.zshrc
-  source ~/.zshrc
-  ```
 - **tmux** 3.0+ — `brew install tmux`
 - **git** 2.5+ (only needed for worktree mode) — `brew install git`
 - **bash** (for hook execution) — present on macOS by default
 
 ## Install
 
-Easy way:
+### Homebrew (macOS / Linux)
 
 ```sh
+brew install jeromecoloma/sessionx/sessionx
+```
+
+Tap repo: [jeromecoloma/homebrew-sessionx](https://github.com/jeromecoloma/homebrew-sessionx).
+
+### From crates.io
+
+```sh
+cargo install sessionx --locked
+export PATH="$HOME/.cargo/bin:$PATH"   # if not already
+```
+
+Needs a Rust toolchain (stable, 1.75+). Install via [rustup](https://rustup.rs) if you don't have one.
+
+### Prebuilt binaries
+
+Grab a tarball for your platform from the [GitHub Releases](https://github.com/jeromecoloma/sessionx/releases) page (macOS arm64/x86_64, Linux arm64/x86_64). Each tarball ships with a `.sha256` sidecar — verify with `shasum -a 256 -c sessionx-vX.Y.Z-<target>.tar.gz.sha256`.
+
+### From source
+
+```sh
+git clone https://github.com/jeromecoloma/sessionx
+cd sessionx
 ./install.sh             # interactive — builds, asks about completions
 ./install.sh --yes       # non-interactive (uses your $SHELL)
 ./install.sh --no-completions
 ./install.sh --completions-only --shell zsh
 ```
 
-Manual:
-
-```sh
-cargo install --path .
-export PATH="$HOME/.cargo/bin:$PATH"   # if not already
-```
+Or manually with `cargo install --path .`. Building from source needs a Rust toolchain (stable, 1.75+).
 
 ## Quick start
 
