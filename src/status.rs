@@ -50,6 +50,20 @@ pub fn apply(session: &str, spec: &StatusSpec) -> Result<()> {
         None => None,
     };
 
+    // Resolve id-style placeholders inside theme format strings.
+    let win_style = spec.window_id_style.as_deref().unwrap_or("fsquare");
+    let pane_style = spec.pane_id_style.as_deref().unwrap_or("super");
+    themes::validate_id_style(win_style)?;
+    themes::validate_id_style(pane_style)?;
+    let resolved = theme.as_ref().map(|t| t.resolve(win_style, pane_style));
+
+    // Materialize theme-provided helper scripts (idempotent).
+    if let Some(t) = &theme {
+        for (name, body) in &t.builtin_segments {
+            write_segment(name, body)?;
+        }
+    }
+
     // Merge style: theme first, user overrides on top.
     let mut style = std::collections::BTreeMap::new();
     if let Some(t) = &theme {
@@ -70,12 +84,12 @@ pub fn apply(session: &str, spec: &StatusSpec) -> Result<()> {
         }
     }
 
-    let theme_left = theme.as_ref().and_then(|t| t.left.as_deref());
-    let theme_right = theme.as_ref().and_then(|t| t.right.as_deref());
-    let theme_win = theme.as_ref().and_then(|t| t.window_format.as_deref());
-    let theme_curwin = theme
+    let theme_left = resolved.as_ref().and_then(|r| r.left.as_deref());
+    let theme_right = resolved.as_ref().and_then(|r| r.right.as_deref());
+    let theme_win = resolved.as_ref().and_then(|r| r.window_format.as_deref());
+    let theme_curwin = resolved
         .as_ref()
-        .and_then(|t| t.current_window_format.as_deref());
+        .and_then(|r| r.current_window_format.as_deref());
     let theme_interval = theme.as_ref().and_then(|t| t.status_interval);
 
     if let Some(left) = spec.left.as_deref().or(theme_left) {

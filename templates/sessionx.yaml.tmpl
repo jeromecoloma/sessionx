@@ -75,9 +75,19 @@ status:
 
   # Pick a preset theme (optional). Available:
   #   tokyo-night, catppuccin, dracula, gruvbox, nord, rose-pine, minimal
+  # Every theme renders windows as: [shell|ssh icon] [boxed window number]
+  # [name] [superscript pane count] [last-window arrow], plus an OS-icon
+  # block, hostname badge, prefix-aware session indicator, and (for non-
+  # minimal themes) a git branch + dirty/clean dot on the right.
   # Anything you set in `style:` / `left:` / `right:` / `window_format:` etc.
   # below overrides the theme's defaults.
   theme: tokyo-night
+
+  # Glyph styles for the boxed window number and the superscript pane count.
+  # Allowed: fsquare (default), hsquare, dsquare, super (default for panes),
+  #          sub, roman, digital, none, hide.
+  # window_id_style: fsquare
+  # pane_id_style: super
 
   # Manual overrides (all optional). Style keys map 1:1 to tmux options
   # (snake_case → kebab-case). See `man tmux`.

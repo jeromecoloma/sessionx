@@ -102,6 +102,11 @@ pub struct StatusSpec {
     pub status_interval: Option<u32>,
     #[serde(default)]
     pub icons: std::collections::BTreeMap<String, String>,
+    /// Glyph style for window numbers in the status bar.
+    /// Allowed: fsquare, hsquare, dsquare, super, sub, roman, digital, none, hide.
+    pub window_id_style: Option<String>,
+    /// Glyph style for the per-window pane count.
+    pub pane_id_style: Option<String>,
 }
 
 fn default_true() -> bool {
