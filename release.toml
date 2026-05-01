@@ -27,5 +27,6 @@ allow-branch = ["main"]
 # heading, and re-create an empty [Unreleased] section.
 pre-release-replacements = [
     { file = "CHANGELOG.md", search = "## \\[Unreleased\\]", replace = "## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly = 1 },
-    { file = "CHANGELOG.md", search = "v0.1.0\\.\\.\\.HEAD", replace = "v{{version}}...HEAD", exactly = 1 },
+    { file = "CHANGELOG.md", search = "v{{prev_version}}\\.\\.\\.HEAD", replace = "v{{version}}...HEAD", exactly = 1 },
+    { file = "CHANGELOG.md", search = "\\[{{prev_version}}\\]: https://github.com/jeromecoloma/sessionx/releases/tag/v{{prev_version}}", replace = "[{{version}}]: https://github.com/jeromecoloma/sessionx/releases/tag/v{{version}}\n[{{prev_version}}]: https://github.com/jeromecoloma/sessionx/releases/tag/v{{prev_version}}", exactly = 1 },
 ]
