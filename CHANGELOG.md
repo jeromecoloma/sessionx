@@ -10,6 +10,12 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Added
+- `ctrl-x` keybinding in the no-arg picker to delete a managed session
+  (with confirmation). Runs full cleanup (pre_remove hooks + worktree
+  removal) when the project's `.sessionx.yaml` is reachable, otherwise
+  falls back to killing just the tmux session. Requires `fzf`.
+
 ## [0.1.1] - 2026-05-01
 
 ### Added
