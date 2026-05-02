@@ -3,6 +3,7 @@ use std::path::Path;
 use std::process::{Command, Stdio};
 
 use crate::{cmd, config, picker, tmux};
+use tmux::ManagedSession;
 
 const DEFAULT_HANDLE: &str = "main";
 
@@ -53,9 +54,28 @@ pub fn run() -> Result<()> {
     labels.push("Quit".to_string());
     actions.push(Action::Quit);
 
-    let Some(idx) = picker::select("sessionx", &labels)? else {
+    let (expect_keys, header): (&[&str], Option<&str>) = if managed.is_empty() {
+        (&[], None)
+    } else {
+        (
+            &["ctrl-x"],
+            Some("enter: select  ·  ctrl-x: delete managed session"),
+        )
+    };
+    let Some((idx, key)) = picker::select_with_keys("sessionx", &labels, expect_keys, header)?
+    else {
         return Ok(());
     };
+
+    if key.as_deref() == Some("ctrl-x") {
+        if let Action::Open(name) = &actions[idx] {
+            if let Some(m) = managed.iter().find(|m| &m.name == name) {
+                return delete_managed(m);
+            }
+        }
+        eprintln!("sessionx: ctrl-x only deletes managed sessions");
+        return Ok(());
+    }
 
     match &actions[idx] {
         Action::Attach => cmd::add::run(DEFAULT_HANDLE, None, true),
@@ -69,6 +89,33 @@ pub fn run() -> Result<()> {
         Action::Open(name) => cmd::open::run(Some(name), false),
         Action::PlainTmux => plain_tmux(&cwd),
         Action::Quit => Ok(()),
+    }
+}
+
+fn delete_managed(m: &ManagedSession) -> Result<()> {
+    let msg = format!("Delete session '{}' ({})?", m.name, m.project);
+    if !picker::confirm(&msg, false)? {
+        return Ok(());
+    }
+    let project_path = Path::new(&m.project);
+    let handle = if m.handle.is_empty() {
+        DEFAULT_HANDLE
+    } else {
+        &m.handle
+    };
+    match config::load_from_dir(project_path) {
+        Ok(loaded) => cmd::rm::run_with_loaded(&loaded, handle, false),
+        Err(_) => {
+            if tmux::has_session(&m.name) {
+                tmux::kill_session(&m.name)?;
+                println!("killed session {}", m.name);
+            }
+            eprintln!(
+                "sessionx: project config not found at {} — worktree cleanup skipped",
+                m.project
+            );
+            Ok(())
+        }
     }
 }
 

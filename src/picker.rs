@@ -21,27 +21,49 @@ fn has_bin(bin: &str) -> bool {
 /// Returns `Ok(None)` if the user cancels or no TTY is attached.
 /// Prefers `fzf` when available, falls back to `inquire`.
 pub fn select(title: &str, items: &[String]) -> Result<Option<usize>> {
+    Ok(select_with_keys(title, items, &[], None)?.map(|(idx, _)| idx))
+}
+
+/// Like `select`, but also reports which "expect" key the user pressed (if any).
+/// `expect_keys` are passed to fzf via `--expect`. On Enter the returned key is `None`.
+/// `header` is shown above the list (fzf only).
+/// The inquire fallback ignores expect keys and always returns `None` for the key.
+pub fn select_with_keys(
+    title: &str,
+    items: &[String],
+    expect_keys: &[&str],
+    header: Option<&str>,
+) -> Result<Option<(usize, Option<String>)>> {
     if items.is_empty() || !is_tty() {
         return Ok(None);
     }
     if has_bin("fzf") {
-        return select_fzf(title, items);
+        return select_fzf(title, items, expect_keys, header);
     }
     select_inquire(title, items)
 }
 
-fn select_fzf(title: &str, items: &[String]) -> Result<Option<usize>> {
-    let mut child = Command::new("fzf")
-        .args([
-            "--prompt",
-            &format!("{title}> "),
-            "--height=40%",
-            "--reverse",
-            "--no-multi",
-        ])
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()?;
+fn select_fzf(
+    title: &str,
+    items: &[String],
+    expect_keys: &[&str],
+    header: Option<&str>,
+) -> Result<Option<(usize, Option<String>)>> {
+    let mut cmd = Command::new("fzf");
+    cmd.args([
+        "--prompt",
+        &format!("{title}> "),
+        "--height=40%",
+        "--reverse",
+        "--no-multi",
+    ]);
+    if !expect_keys.is_empty() {
+        cmd.args(["--expect", &expect_keys.join(",")]);
+    }
+    if let Some(h) = header {
+        cmd.args(["--header", h]);
+    }
+    let mut child = cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).spawn()?;
     {
         let stdin = child
             .stdin
@@ -55,15 +77,45 @@ fn select_fzf(title: &str, items: &[String]) -> Result<Option<usize>> {
     if !out.status.success() {
         return Ok(None);
     }
-    let chosen = String::from_utf8_lossy(&out.stdout).trim().to_string();
-    Ok(items.iter().position(|s| s == &chosen))
+    let stdout = String::from_utf8_lossy(&out.stdout);
+    let (key, chosen) = if expect_keys.is_empty() {
+        (None, stdout.trim().to_string())
+    } else {
+        let mut lines = stdout.lines();
+        let key_line = lines.next().unwrap_or("").trim().to_string();
+        let chosen_line = lines.next().unwrap_or("").trim().to_string();
+        let key = if key_line.is_empty() {
+            None
+        } else {
+            Some(key_line)
+        };
+        (key, chosen_line)
+    };
+    if chosen.is_empty() {
+        return Ok(None);
+    }
+    Ok(items.iter().position(|s| s == &chosen).map(|i| (i, key)))
 }
 
-fn select_inquire(title: &str, items: &[String]) -> Result<Option<usize>> {
+fn select_inquire(title: &str, items: &[String]) -> Result<Option<(usize, Option<String>)>> {
     let opts: Vec<String> = items.to_vec();
     match inquire::Select::new(title, opts.clone()).prompt() {
-        Ok(choice) => Ok(opts.iter().position(|s| s == &choice)),
+        Ok(choice) => Ok(opts.iter().position(|s| s == &choice).map(|i| (i, None))),
         Err(_) => Ok(None),
+    }
+}
+
+/// Yes/No confirmation prompt. Returns `Ok(false)` on cancel or no TTY.
+pub fn confirm(message: &str, default: bool) -> Result<bool> {
+    if !is_tty() {
+        return Ok(false);
+    }
+    match inquire::Confirm::new(message)
+        .with_default(default)
+        .prompt()
+    {
+        Ok(b) => Ok(b),
+        Err(_) => Ok(false),
     }
 }
 

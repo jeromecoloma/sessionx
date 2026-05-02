@@ -4,10 +4,14 @@ use crate::{config, hooks, tmux, worktree};
 
 pub fn run(handle: &str, force: bool) -> Result<()> {
     let loaded = config::find_and_load()?;
+    run_with_loaded(&loaded, handle, force)
+}
+
+pub fn run_with_loaded(loaded: &config::Loaded, handle: &str, force: bool) -> Result<()> {
     let session = loaded.session_name(handle);
 
     let worktree_path = if loaded.worktree_mode() {
-        worktree::worktree_path(&loaded, handle).ok()
+        worktree::worktree_path(loaded, handle).ok()
     } else {
         None
     };
@@ -45,7 +49,7 @@ pub fn run(handle: &str, force: bool) -> Result<()> {
     }
 
     if loaded.worktree_mode() {
-        worktree::remove(&loaded, handle, force)?;
+        worktree::remove(loaded, handle, force)?;
         if let Some(p) = &worktree_path {
             println!("removed worktree {}", p.display());
         }

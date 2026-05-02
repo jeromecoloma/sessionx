@@ -169,7 +169,12 @@ fn sanitize_session(s: &str) -> String {
 /// Walk up from `cwd` looking for `.sessionx.yaml`.
 pub fn find_and_load() -> Result<Loaded> {
     let cwd = std::env::current_dir()?;
-    let mut dir: &Path = &cwd;
+    load_from_dir(&cwd)
+}
+
+/// Walk up from `start` looking for `.sessionx.yaml`.
+pub fn load_from_dir(start: &Path) -> Result<Loaded> {
+    let mut dir: &Path = start;
     loop {
         let candidate = dir.join(CONFIG_FILENAME);
         if candidate.is_file() {
@@ -190,7 +195,7 @@ pub fn find_and_load() -> Result<Loaded> {
                 return Err(anyhow!(
                     "no {} found in {} or any parent directory",
                     CONFIG_FILENAME,
-                    cwd.display()
+                    start.display()
                 ))
             }
         }
