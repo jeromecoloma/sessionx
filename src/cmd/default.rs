@@ -2,7 +2,8 @@ use anyhow::Result;
 use std::path::Path;
 use std::process::{Command, Stdio};
 
-use crate::{cmd, config, picker, tmux};
+use crate::config::StatusSpec;
+use crate::{cmd, config, picker, status, themes, tmux};
 use tmux::ManagedSession;
 
 const DEFAULT_HANDLE: &str = "main";
@@ -131,6 +132,10 @@ fn is_git_repo(cwd: &Path) -> bool {
 }
 
 fn plain_tmux(cwd: &Path) -> Result<()> {
+    let Some(theme) = pick_plain_theme()? else {
+        return Ok(());
+    };
+
     let base = cwd.file_name().and_then(|s| s.to_str()).unwrap_or("tmux");
     let stamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -143,7 +148,35 @@ fn plain_tmux(cwd: &Path) -> Result<()> {
         name = sanitize(&format!("tmux-{base}-{}-{suffix}", stamp % 100000));
     }
     tmux::new_session(&name, cwd, None)?;
+
+    if let Some(theme_name) = theme {
+        let spec = StatusSpec {
+            enabled: true,
+            theme: Some(theme_name),
+            ..StatusSpec::default()
+        };
+        status::apply(&name, &spec)?;
+    }
+
     tmux::attach_or_switch(&name)
+}
+
+/// Prompt for a theme to apply to a plain tmux session.
+/// Outer `Option` distinguishes cancel (`None` → abort spawn) from a real selection.
+/// Inner `Option<String>` carries the theme name, or `None` for the "(no theme)" entry.
+fn pick_plain_theme() -> Result<Option<Option<String>>> {
+    let none_label = "(no theme)".to_string();
+    let mut items = vec![none_label];
+    items.extend(themes::list().iter().map(|s| s.to_string()));
+
+    let Some(idx) = picker::select("theme for plain tmux session", &items)? else {
+        return Ok(None);
+    };
+    if idx == 0 {
+        Ok(Some(None))
+    } else {
+        Ok(Some(Some(items[idx].clone())))
+    }
 }
 
 fn sanitize(s: &str) -> String {
