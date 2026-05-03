@@ -10,6 +10,25 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-05-03
+
+### Added
+- Theme picker entry in the no-arg picker for plain (unmanaged) tmux
+  sessions, so themes can be applied to any tmux session.
+- Long-session-name guard: when an auto-generated session name exceeds
+  20 characters, `sessionx add` and the picker prompt for a shorter
+  name before creating the session.
+- Nested-session detection: the picker and `sessionx add` now refuse
+  to run inside a sessionx-attached tmux session. Set
+  `SESSIONX_ALLOW_NESTED=1` to override. Detection uses the
+  `@sessionx-managed` user option plus a `SESSIONX_ACTIVE` tmux env
+  var exported on attach/switch.
+
+### Fixed
+- `sessionx ls` now finds sessions that were renamed at creation time
+  by matching managed sessions against the current project root, not
+  just the prefix.
+
 ## [0.1.2] - 2026-05-02
 
 ### Added
@@ -61,7 +80,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.3
 [0.1.2]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.2
 [0.1.1]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.1
 [0.1.0]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.0
