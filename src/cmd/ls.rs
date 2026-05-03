@@ -15,13 +15,34 @@ pub fn run(names_only: bool, all: bool) -> Result<()> {
 
     let loaded = crate::config::find_and_load()?;
     let prefix = loaded.session_prefix();
+    let project_root = loaded.project_root.display().to_string();
+    let managed = crate::tmux::list_managed_sessions().unwrap_or_default();
     let sessions = crate::tmux::list_sessions()?;
-    let mut found = false;
-    for s in sessions {
+
+    let mut emitted: std::collections::BTreeSet<String> = Default::default();
+    let mut entries: Vec<(String, String)> = vec![]; // (session_name, handle)
+
+    // 1. Managed sessions tagged with this project root (handles renamed sessions).
+    for m in &managed {
+        if m.project == project_root && emitted.insert(m.name.clone()) {
+            entries.push((m.name.clone(), m.handle.clone()));
+        }
+    }
+
+    // 2. Legacy / untagged sessions matched by prefix.
+    for s in &sessions {
         if !s.starts_with(&prefix) {
             continue;
         }
-        let handle = &s[prefix.len()..];
+        if !emitted.insert(s.clone()) {
+            continue;
+        }
+        let handle = s[prefix.len()..].to_string();
+        entries.push((s.clone(), handle));
+    }
+
+    let found = !entries.is_empty();
+    for (name, handle) in &entries {
         if names_only {
             println!("{handle}");
         } else if loaded.worktree_mode() {
@@ -29,14 +50,13 @@ pub fn run(names_only: bool, all: bool) -> Result<()> {
                 .ok()
                 .map(|p| format!("  {}", p.display()))
                 .unwrap_or_default();
-            println!("{s}{wt}");
+            println!("{name}{wt}");
         } else {
-            println!("{s}");
+            println!("{name}");
         }
-        found = true;
     }
     if !found && !names_only {
-        eprintln!("no sessions matching prefix '{prefix}'");
+        eprintln!("no sessions for project '{project_root}'");
     }
     Ok(())
 }

@@ -5,6 +5,13 @@ use crate::config::{self, Config, Loaded, PaneSpec, SplitDir};
 use crate::{agent, hooks, picker, status, tmux, worktree};
 
 pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
+    if tmux::in_sessionx() && std::env::var("SESSIONX_ALLOW_NESTED").is_err() {
+        return Err(anyhow!(
+            "already running inside a sessionx-attached tmux session; \
+             set SESSIONX_ALLOW_NESTED=1 to override"
+        ));
+    }
+
     let loaded = config::find_and_load()?;
     let auto_session = loaded.session_name(handle);
 

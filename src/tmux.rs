@@ -246,7 +246,32 @@ pub fn in_tmux() -> bool {
     std::env::var("TMUX").is_ok()
 }
 
+/// Returns true if the current tmux session was tagged by sessionx as managed.
+pub fn current_session_is_managed() -> bool {
+    if !in_tmux() {
+        return false;
+    }
+    let out = match Command::new("tmux")
+        .args(["display-message", "-p", "#{@sessionx-managed}"])
+        .output()
+    {
+        Ok(o) => o,
+        Err(_) => return false,
+    };
+    String::from_utf8_lossy(&out.stdout).trim() == "1"
+}
+
+/// Returns true if the current process is running inside a sessionx-attached tmux session.
+/// Combines two signals:
+///  - the current session is managed (`@sessionx-managed=1`), or
+///  - `SESSIONX_ACTIVE` is set in the environment (covers unmanaged sessions sessionx attached to).
+pub fn in_sessionx() -> bool {
+    current_session_is_managed() || std::env::var("SESSIONX_ACTIVE").is_ok()
+}
+
 pub fn attach_or_switch(name: &str) -> Result<()> {
+    // Mark the tmux server env so child shells in attached sessions can detect sessionx.
+    let _ = run_quiet(&["set-environment", "-g", "SESSIONX_ACTIVE", "1"]);
     if in_tmux() {
         run(&["switch-client", "-t", name])?;
     } else {

@@ -23,6 +23,14 @@ pub fn run() -> Result<()> {
         std::process::exit(2);
     }
 
+    if tmux::in_sessionx() && std::env::var("SESSIONX_ALLOW_NESTED").is_err() {
+        eprintln!(
+            "sessionx: already running inside a sessionx-attached tmux session. \
+             Set SESSIONX_ALLOW_NESTED=1 to override."
+        );
+        std::process::exit(2);
+    }
+
     let loaded = config::find_and_load().ok();
     let cwd = std::env::current_dir()?;
     let in_git = is_git_repo(&cwd);
