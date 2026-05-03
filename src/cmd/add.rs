@@ -2,19 +2,26 @@ use anyhow::{anyhow, Result};
 use std::path::Path;
 
 use crate::config::{self, Config, Loaded, PaneSpec, SplitDir};
-use crate::{agent, hooks, status, tmux, worktree};
+use crate::{agent, hooks, picker, status, tmux, worktree};
 
 pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
     let loaded = config::find_and_load()?;
-    let session = loaded.session_name(handle);
+    let auto_session = loaded.session_name(handle);
 
-    if tmux::has_session(&session) {
-        eprintln!("session {session} already exists — attaching");
+    if tmux::has_session(&auto_session) {
+        eprintln!("session {auto_session} already exists — attaching");
         if attach {
-            tmux::attach_or_switch(&session)?;
+            tmux::attach_or_switch(&auto_session)?;
         }
         return Ok(());
     }
+
+    let session = picker::maybe_rename_long(
+        auto_session,
+        20,
+        config::sanitize_session,
+        tmux::has_session,
+    )?;
 
     // 1. Worktree (if applicable)
     let (work_cwd, branch) = if loaded.worktree_mode() {

@@ -119,6 +119,41 @@ pub fn confirm(message: &str, default: bool) -> Result<bool> {
     }
 }
 
+/// If `name` exceeds `max_chars`, offer a rename. Returns the chosen name —
+/// either the user's input (sanitized via `sanitize`) or the original on
+/// blank/cancel/empty/collision (via `is_taken`).
+pub fn maybe_rename_long(
+    name: String,
+    max_chars: usize,
+    sanitize: impl Fn(&str) -> String,
+    is_taken: impl Fn(&str) -> bool,
+) -> Result<String> {
+    if name.chars().count() <= max_chars {
+        return Ok(name);
+    }
+    if !is_tty() {
+        return Ok(name);
+    }
+    let help = format!("current: {name} ({} chars) — esc to keep", name.chars().count());
+    let raw = match inquire::Text::new("rename session?")
+        .with_default(&name)
+        .with_help_message(&help)
+        .prompt()
+    {
+        Ok(s) => s,
+        Err(_) => return Ok(name),
+    };
+    let trimmed = raw.trim();
+    if trimmed.is_empty() || trimmed == name {
+        return Ok(name);
+    }
+    let candidate = sanitize(trimmed);
+    if candidate.is_empty() || is_taken(&candidate) {
+        return Ok(name);
+    }
+    Ok(candidate)
+}
+
 /// Prompt the user for free-text input.
 /// Returns `Ok(None)` if cancelled (esc/ctrl+c), no TTY, or input is blank.
 pub fn prompt(title: &str) -> Result<Option<String>> {

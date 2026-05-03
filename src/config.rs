@@ -154,7 +154,7 @@ impl Loaded {
 }
 
 /// tmux target syntax uses `.` and `:` as separators, so they're unsafe in session names.
-fn sanitize_session(s: &str) -> String {
+pub fn sanitize_session(s: &str) -> String {
     s.chars()
         .map(|c| {
             if matches!(c, '.' | ':' | ' ' | '\t') {
