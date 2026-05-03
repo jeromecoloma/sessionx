@@ -134,7 +134,10 @@ pub fn maybe_rename_long(
     if !is_tty() {
         return Ok(name);
     }
-    let help = format!("current: {name} ({} chars) — esc to keep", name.chars().count());
+    let help = format!(
+        "current: {name} ({} chars) — esc to keep",
+        name.chars().count()
+    );
     let raw = match inquire::Text::new("rename session?")
         .with_default(&name)
         .with_help_message(&help)
