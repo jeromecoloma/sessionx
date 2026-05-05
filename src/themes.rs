@@ -190,9 +190,7 @@ fn render_git_status_sh() -> String {
                 && b.chars()
                     .all(|c| c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '/' | '-'));
             if !ok {
-                eprintln!(
-                    "sessionx: ignoring unsafe entry in git_main_branches: '{b}'"
-                );
+                eprintln!("sessionx: ignoring unsafe entry in git_main_branches: '{b}'");
             }
             ok
         })

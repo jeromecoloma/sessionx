@@ -10,6 +10,16 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Changed
+- Default project template's second window is now a plain `shell`
+  (`exec $SHELL`) instead of `${EDITOR:-vi} .`. The same applies to the
+  PHP/Laravel auto-detected layout.
+
+### Fixed
+- Trimmed a stray trailing space in the inactive-window status format,
+  and removed the placeholder space in the last-window indicator's
+  off-branch so non-last windows no longer carry phantom padding.
+
 ## [0.1.6] - 2026-05-05
 
 ### Fixed

@@ -157,9 +157,7 @@ fn apply_position(
             }
         }
         other => {
-            eprintln!(
-                "sessionx: unknown status.position '{other}' (expected bottom|top|both)"
-            );
+            eprintln!("sessionx: unknown status.position '{other}' (expected bottom|top|both)");
             tmux::set_option(session, "status-position", "bottom")?;
             tmux::set_window_option_for_all(session, "pane-border-status", "off")?;
         }
