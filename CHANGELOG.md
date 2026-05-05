@@ -10,6 +10,13 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Fixed
+- `sessionx rm <name>` (and the `sxk` shell helper) now works on
+  renamed managed sessions. The argument is resolved against the
+  managed-session registry first, so a session whose name no longer
+  matches `prefix+handle` is killed and its worktree removed in the
+  correct project.
+
 ## [0.1.5] - 2026-05-05
 
 ### Fixed

@@ -1,10 +1,39 @@
 use anyhow::Result;
+use std::path::Path;
 
 use crate::{config, hooks, tmux, worktree};
 
-pub fn run(handle: &str, force: bool) -> Result<()> {
+/// Accepts either a project handle (resolved against the current project) or
+/// the literal name of a managed tmux session — useful for renamed sessions
+/// where `prefix+handle` no longer matches the actual session name.
+pub fn run(arg: &str, force: bool) -> Result<()> {
+    if let Some(m) = tmux::list_managed_sessions()
+        .unwrap_or_default()
+        .into_iter()
+        .find(|m| m.name == arg)
+    {
+        let handle = if m.handle.is_empty() {
+            arg.to_string()
+        } else {
+            m.handle.clone()
+        };
+        match config::load_from_dir(Path::new(&m.project)) {
+            Ok(loaded) => return run_with_loaded(&loaded, &handle, force),
+            Err(_) => {
+                if tmux::has_session(&m.name) {
+                    tmux::kill_session(&m.name)?;
+                    println!("killed session {}", m.name);
+                }
+                eprintln!(
+                    "sessionx: project config not found at {} — worktree cleanup skipped",
+                    m.project
+                );
+                return Ok(());
+            }
+        }
+    }
     let loaded = config::find_and_load()?;
-    run_with_loaded(&loaded, handle, force)
+    run_with_loaded(&loaded, arg, force)
 }
 
 pub fn run_with_loaded(loaded: &config::Loaded, handle: &str, force: bool) -> Result<()> {
