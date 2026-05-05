@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-05
+
 ### Fixed
 - `sessionx rm <name>` (and the `sxk` shell helper) now works on
   renamed managed sessions. The argument is resolved against the
@@ -107,7 +109,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.6
 [0.1.5]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.5
 [0.1.4]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.4
 [0.1.3]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.3
