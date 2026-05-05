@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-05-05
+
 ### Changed
 - Default project template's second window is now a plain `shell`
   (`exec $SHELL`) instead of `${EDITOR:-vi} .`. The same applies to the
@@ -119,7 +121,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.6...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.7...HEAD
+[0.1.7]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.7
 [0.1.6]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.6
 [0.1.5]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.5
 [0.1.4]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.4
