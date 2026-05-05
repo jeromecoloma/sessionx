@@ -18,7 +18,9 @@ pub fn run(arg: &str, force: bool) -> Result<()> {
             m.handle.clone()
         };
         match config::load_from_dir(Path::new(&m.project)) {
-            Ok(loaded) => return run_with_loaded(&loaded, &handle, force),
+            Ok(loaded) => {
+                return run_inner(&loaded, &handle, Some(&m.name), force);
+            }
             Err(_) => {
                 if tmux::has_session(&m.name) {
                     tmux::kill_session(&m.name)?;
@@ -37,7 +39,18 @@ pub fn run(arg: &str, force: bool) -> Result<()> {
 }
 
 pub fn run_with_loaded(loaded: &config::Loaded, handle: &str, force: bool) -> Result<()> {
-    let session = loaded.session_name(handle);
+    run_inner(loaded, handle, None, force)
+}
+
+fn run_inner(
+    loaded: &config::Loaded,
+    handle: &str,
+    session_override: Option<&str>,
+    force: bool,
+) -> Result<()> {
+    let session = session_override
+        .map(str::to_string)
+        .unwrap_or_else(|| loaded.session_name(handle));
 
     let worktree_path = if loaded.worktree_mode() {
         worktree::worktree_path(loaded, handle).ok()
@@ -72,16 +85,28 @@ pub fn run_with_loaded(loaded: &config::Loaded, handle: &str, force: bool) -> Re
         hooks::run_all("pre_remove", &loaded.config.pre_remove, &env)?;
     }
 
-    if tmux::has_session(&session) {
+    let killed = if tmux::has_session(&session) {
         tmux::kill_session(&session)?;
         println!("killed session {session}");
-    }
+        true
+    } else {
+        false
+    };
 
-    if loaded.worktree_mode() {
+    let removed_worktree = if loaded.worktree_mode() {
         worktree::remove(loaded, handle, force)?;
         if let Some(p) = &worktree_path {
             println!("removed worktree {}", p.display());
+            true
+        } else {
+            false
         }
+    } else {
+        false
+    };
+
+    if !killed && !removed_worktree {
+        eprintln!("sessionx: no tmux session named '{session}' — nothing to do");
     }
     Ok(())
 }
