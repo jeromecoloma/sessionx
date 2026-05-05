@@ -260,7 +260,7 @@ fn build_window_format(p: &Palette) -> String {
          #(~/.sessionx/segments/sx-fmt-num.sh #I __WIN_STYLE__)\
          #[fg={muted}]#W\
          #[fg={dim}] #(~/.sessionx/segments/sx-fmt-num.sh #{{window_panes}} __PANE_STYLE__)\
-         #[fg={dim}]#{{?window_last_flag,󰁯 , }}",
+         #[fg={dim}]#{{?window_last_flag,󰁯 ,}}",
         dim = p.dim,
         bg = p.bg,
         muted = p.muted
@@ -274,7 +274,7 @@ fn build_current_window_format(p: &Palette) -> String {
          #(~/.sessionx/segments/sx-fmt-num.sh #I __WIN_STYLE__)\
          #[fg={fg},bg={dim},bold]#W\
          #[fg={accent2},bg={dim},nobold] #(~/.sessionx/segments/sx-fmt-num.sh #{{window_panes}} __PANE_STYLE__)\
-         #[fg={accent2},bg={dim}]#{{?window_last_flag,󰁯 , }}\
+         #[fg={accent2},bg={dim}]#{{?window_last_flag,󰁯 ,}}\
          #[fg={dim},bg={bg}]{pill_right}",
         dim = p.dim,
         bg = p.bg,
