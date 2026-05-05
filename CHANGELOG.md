@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-05-05
+
 ### Fixed
 - `sessionx add` rename prompt no longer silently falls back to the
   long auto-generated name when the chosen rename collides with an
@@ -98,7 +100,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.5
 [0.1.4]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.4
 [0.1.3]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.3
 [0.1.2]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.2
