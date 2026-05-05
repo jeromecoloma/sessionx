@@ -10,6 +10,12 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Fixed
+- `sessionx add` rename prompt no longer silently falls back to the
+  long auto-generated name when the chosen rename collides with an
+  existing tmux session or sanitizes to empty. The prompt now reports
+  the conflict and re-asks; Esc still keeps the original name.
+
 ## [0.1.4] - 2026-05-05
 
 ### Added

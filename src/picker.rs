@@ -121,7 +121,8 @@ pub fn confirm(message: &str, default: bool) -> Result<bool> {
 
 /// If `name` exceeds `max_chars`, offer a rename. Returns the chosen name —
 /// either the user's input (sanitized via `sanitize`) or the original on
-/// blank/cancel/empty/collision (via `is_taken`).
+/// cancel. Re-prompts on empty/invalid/collision so the user sees why the
+/// candidate was rejected instead of silently falling back to the long name.
 pub fn maybe_rename_long(
     name: String,
     max_chars: usize,
@@ -138,23 +139,32 @@ pub fn maybe_rename_long(
         "current: {name} ({} chars) — esc to keep",
         name.chars().count()
     );
-    let raw = match inquire::Text::new("rename session?")
-        .with_default(&name)
-        .with_help_message(&help)
-        .prompt()
-    {
-        Ok(s) => s,
-        Err(_) => return Ok(name),
-    };
-    let trimmed = raw.trim();
-    if trimmed.is_empty() || trimmed == name {
-        return Ok(name);
+    loop {
+        let raw = match inquire::Text::new("rename session?")
+            .with_default(&name)
+            .with_help_message(&help)
+            .prompt()
+        {
+            Ok(s) => s,
+            Err(_) => return Ok(name),
+        };
+        let trimmed = raw.trim();
+        if trimmed.is_empty() || trimmed == name {
+            return Ok(name);
+        }
+        let candidate = sanitize(trimmed);
+        if candidate.is_empty() {
+            eprintln!("sessionx: '{trimmed}' sanitizes to an empty name — try another");
+            continue;
+        }
+        if is_taken(&candidate) {
+            eprintln!(
+                "sessionx: a tmux session named '{candidate}' already exists — try another"
+            );
+            continue;
+        }
+        return Ok(candidate);
     }
-    let candidate = sanitize(trimmed);
-    if candidate.is_empty() || is_taken(&candidate) {
-        return Ok(name);
-    }
-    Ok(candidate)
 }
 
 /// Prompt the user for free-text input.
