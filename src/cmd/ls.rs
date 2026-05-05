@@ -3,6 +3,12 @@ use anyhow::Result;
 pub fn run(names_only: bool, all: bool) -> Result<()> {
     if all {
         let managed = crate::tmux::list_managed_sessions()?;
+        if managed.is_empty() {
+            if !names_only {
+                eprintln!("no managed sessionx sessions");
+            }
+            return Ok(());
+        }
         for m in &managed {
             if names_only {
                 println!("{}", m.name);
