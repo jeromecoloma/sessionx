@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-05-05
+
 ### Added
 - `sx`, `sxl`, `sxa`, `sxk` shell helpers (bash/zsh/fish) shipped in
   `shell/sessionx-helpers.{sh,fish}`. `sx` is a passthrough shortcut
@@ -90,7 +92,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.4
 [0.1.3]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.3
 [0.1.2]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.2
 [0.1.1]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.1
