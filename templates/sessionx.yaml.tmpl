@@ -31,9 +31,9 @@ windows:
     panes:
       - command: <agent>
         focus: true
-  - name: edit
+  - name: shell
     panes:
-      - command: ${EDITOR:-vi} .
+      - command: exec $SHELL
 
 # panes:
 #   - command: exec $SHELL

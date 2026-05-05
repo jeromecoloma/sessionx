@@ -139,16 +139,16 @@ fn php_windows(_cwd: &Path, _subdir: Option<&str>) -> String {
     // First window runs your AI agent (claude/codex/aider/...). The `<agent>`
     // placeholder resolves via SX_AGENT, ~/.config/sessionx/config.yaml, or
     // defaults to "claude".
-    // Edit window opens at the worktree/project root (not the Laravel subdir).
+    // Second window is a plain shell at the worktree/project root.
     // No `serve` window: Laravel Herd serves the app — `php artisan serve`
     // would conflict.
     "  - name: agent\n\
      \x20   panes:\n\
      \x20     - command: <agent>\n\
      \x20       focus: true\n\
-     \x20 - name: edit\n\
+     \x20 - name: shell\n\
      \x20   panes:\n\
-     \x20     - command: ${EDITOR:-vi} .\n"
+     \x20     - command: exec $SHELL\n"
         .to_string()
 }
 
@@ -340,11 +340,10 @@ mod tests {
             !yaml.contains("php artisan serve"),
             "yaml should not contain serve:\n{yaml}"
         );
-        assert!(
-            yaml.contains("${EDITOR:-vi} ."),
-            "edit should target root:\n{yaml}"
-        );
-        assert!(!yaml.contains("${EDITOR:-vi} www"));
+        assert!(yaml.contains("- name: agent"));
+        assert!(yaml.contains("- name: shell"));
+        assert!(yaml.contains("exec $SHELL"));
+        assert!(!yaml.contains("${EDITOR"));
     }
 
     #[test]

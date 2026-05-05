@@ -260,7 +260,7 @@ fn build_window_format(p: &Palette) -> String {
          #(~/.sessionx/segments/sx-fmt-num.sh #I __WIN_STYLE__)\
          #[fg={muted}]#W\
          #[fg={dim}] #(~/.sessionx/segments/sx-fmt-num.sh #{{window_panes}} __PANE_STYLE__)\
-         #[fg={dim}]#{{?window_last_flag,󰁯 , }} ",
+         #[fg={dim}]#{{?window_last_flag,󰁯 , }}",
         dim = p.dim,
         bg = p.bg,
         muted = p.muted
