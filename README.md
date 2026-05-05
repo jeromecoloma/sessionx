@@ -192,6 +192,27 @@ sessionx completions fish > ~/.config/fish/completions/sessionx.fish
 
 Supported shells: `bash`, `zsh`, `fish`. Completions are dynamic — `rm <TAB>` lists handles in the current project, `open <TAB>` lists every managed session globally.
 
+## Shell helpers (sxl / sxa / sxk)
+
+A tmux-style helper trio — analogous to `tml`/`tma`/`tmk` but backed by sessionx. With no arg, `sxa`/`sxk` open an `fzf` picker over every managed session globally; with an arg they pass straight through.
+
+```sh
+# zsh / bash
+source /path/to/sessionx/shell/sessionx-helpers.sh
+
+# fish
+source /path/to/sessionx/shell/sessionx-helpers.fish
+```
+
+| Helper | Equivalent |
+| --- | --- |
+| `sx [args...]` | `sessionx` (plain shortcut) |
+| `sxl [flags]` | `sessionx ls --all` (passes flags through, e.g. `sxl --names-only`) |
+| `sxa [name]` | `sessionx open <name>` (fzf picker if no arg) |
+| `sxk [name [--force]]` | `sessionx rm <name>` (fzf picker if no arg) |
+
+`install.sh` will offer to source the helpers into your shell rc.
+
 ## Getting help
 
 - **Bugs / questions** — [open an issue](https://github.com/jeromecoloma/sessionx/issues).

@@ -162,4 +162,33 @@ EOF
         ;;
 esac
 
+#-------------------------------------------------------------------------------
+# 3. Optional: sxl/sxa/sxk shell helpers
+#-------------------------------------------------------------------------------
+helpers_marker='# sessionx helpers'
+case "$SHELL_KIND" in
+    zsh|bash)
+        helpers_file="$SCRIPT_DIR/shell/sessionx-helpers.sh"
+        if [[ "$SHELL_KIND" == "zsh" ]]; then
+            rc_file="$HOME/.zshrc"
+        else
+            rc_file="$HOME/.bashrc"
+        fi
+        ;;
+    fish)
+        helpers_file="$SCRIPT_DIR/shell/sessionx-helpers.fish"
+        rc_file="${XDG_CONFIG_HOME:-$HOME/.config}/fish/config.fish"
+        ;;
+esac
+
+if [[ -f "$helpers_file" ]] && ask_yn "Install sxl/sxa/sxk shell helpers in $rc_file?"; then
+    if [[ -f "$rc_file" ]] && grep -qF "$helpers_marker" "$rc_file"; then
+        log "$rc_file already sources the helpers"
+    else
+        mkdir -p "$(dirname "$rc_file")"
+        printf '\n%s\nsource %q\n' "$helpers_marker" "$helpers_file" >> "$rc_file"
+        log "appended helpers source line to $rc_file"
+    fi
+fi
+
 log "done."
