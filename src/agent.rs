@@ -24,6 +24,8 @@ const DEFAULT_AGENT: &str = "exec $SHELL";
 struct GlobalConfig {
     #[serde(default)]
     agent: Option<String>,
+    #[serde(default)]
+    git_main_branches: Option<Vec<String>>,
 }
 
 /// Path to the global config. Always uses XDG semantics
@@ -86,6 +88,16 @@ fn load_global() -> GlobalConfig {
         return GlobalConfig::default();
     };
     serde_yaml::from_str(&s).unwrap_or_default()
+}
+
+/// Branches that the status bar's git segment treats as "main-line"
+/// (rendered with the git-logo icon). Defaults to `["main", "master"]`
+/// when the global config is missing or has no override.
+pub fn global_git_main_branches() -> Vec<String> {
+    let cfg = load_global();
+    cfg.git_main_branches
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| vec!["main".to_string(), "master".to_string()])
 }
 
 /// True when `~/.config/sessionx/config.yaml` exists and already has a non-empty `agent:` field.
