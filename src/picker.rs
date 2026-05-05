@@ -158,9 +158,7 @@ pub fn maybe_rename_long(
             continue;
         }
         if is_taken(&candidate) {
-            eprintln!(
-                "sessionx: a tmux session named '{candidate}' already exists — try another"
-            );
+            eprintln!("sessionx: a tmux session named '{candidate}' already exists — try another");
             continue;
         }
         return Ok(candidate);
