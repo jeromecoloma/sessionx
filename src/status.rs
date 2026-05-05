@@ -111,6 +111,59 @@ pub fn apply(session: &str, spec: &StatusSpec) -> Result<()> {
         tmux::set_option(session, "status-interval", &interval.to_string())?;
     }
 
+    apply_position(session, spec, resolved.as_ref())?;
+
+    Ok(())
+}
+
+/// Resolve `status.position` (`bottom`/`top`/`both`) and configure tmux.
+/// `both` keeps the regular bottom status line and adds a per-pane top
+/// strip via `pane-border-status` + `pane-border-format`.
+fn apply_position(
+    session: &str,
+    spec: &StatusSpec,
+    resolved: Option<&themes::Resolved>,
+) -> Result<()> {
+    let pos = spec
+        .position
+        .as_deref()
+        .map(str::trim)
+        .map(str::to_lowercase);
+    let pos = pos.as_deref().unwrap_or("bottom");
+    match pos {
+        "bottom" => {
+            tmux::set_option(session, "status-position", "bottom")?;
+            tmux::set_window_option_for_all(session, "pane-border-status", "off")?;
+        }
+        "top" => {
+            tmux::set_option(session, "status-position", "top")?;
+            tmux::set_window_option_for_all(session, "pane-border-status", "off")?;
+        }
+        "both" => {
+            tmux::set_option(session, "status-position", "bottom")?;
+            let top = resolved.and_then(|r| r.pane_border_top.as_deref());
+            match top {
+                Some(fmt) => {
+                    tmux::set_window_option_for_all(session, "pane-border-status", "top")?;
+                    tmux::set_window_option_for_all(session, "pane-border-format", fmt)?;
+                }
+                None => {
+                    eprintln!(
+                        "sessionx: theme has no top-strip format; status.position=both \
+                         falls back to bottom-only"
+                    );
+                    tmux::set_window_option_for_all(session, "pane-border-status", "off")?;
+                }
+            }
+        }
+        other => {
+            eprintln!(
+                "sessionx: unknown status.position '{other}' (expected bottom|top|both)"
+            );
+            tmux::set_option(session, "status-position", "bottom")?;
+            tmux::set_window_option_for_all(session, "pane-border-status", "off")?;
+        }
+    }
     Ok(())
 }
 

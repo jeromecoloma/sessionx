@@ -73,6 +73,12 @@ windows:
 status:
   enabled: true
 
+  # Where the bar lives: bottom (default), top, or both.
+  # `both` keeps the regular bottom status line and adds a per-pane top
+  # strip via tmux's `pane-border-status` (current command + pane title +
+  # git pill).
+  position: both
+
   # Pick a preset theme (optional). Available:
   #   tokyo-night, catppuccin, dracula, gruvbox, nord, rose-pine, minimal
   # Every theme renders windows as: [shell|ssh icon] [boxed window number]

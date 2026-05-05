@@ -9,6 +9,10 @@ pub struct Theme {
     pub window_format: Option<String>,
     pub current_window_format: Option<String>,
     pub status_interval: Option<u32>,
+    /// Format for the per-pane top strip when `status.position: both`.
+    /// `None` means the theme has no top strip — `position: both` falls back
+    /// to bottom-only with a warning.
+    pub pane_border_top: Option<String>,
     /// Helper scripts the theme expects to be materialized into ~/.sessionx/segments/.
     pub builtin_segments: Vec<(&'static str, String)>,
 }
@@ -19,6 +23,7 @@ pub struct Resolved {
     pub right: Option<String>,
     pub window_format: Option<String>,
     pub current_window_format: Option<String>,
+    pub pane_border_top: Option<String>,
 }
 
 impl Theme {
@@ -34,6 +39,7 @@ impl Theme {
             right: sub(&self.right),
             window_format: sub(&self.window_format),
             current_window_format: sub(&self.current_window_format),
+            pane_border_top: sub(&self.pane_border_top),
         }
     }
 }
@@ -281,26 +287,74 @@ fn build_current_window_format(p: &Palette) -> String {
 }
 
 fn build_right(p: &Palette) -> String {
+    // Git segment lives in the per-pane top strip (build_pane_border_top)
+    // when status.position is `both`. Bottom bar keeps just date/time so
+    // it's not duplicated.
+    format!(
+        "#[fg={fg},bg={dim}] %m-%d-%Y \
+         #[fg={accent2}]• \
+         #[fg={fg}]%I:%M %p ",
+        dim = p.dim,
+        fg = p.fg,
+        accent2 = p.accent2,
+    )
+}
+
+/// Tmux conditional that maps `pane_current_command` to a NerdFont icon.
+/// Glyphs are written as `\u{...}` so the source survives editors and pipes
+/// that strip/normalise high Unicode. Falls back to a terminal glyph.
+const PANE_CMD_ICON: &str = "#{?#{m:vim*,#{pane_current_command}},\u{e62b},\
+#{?#{m:nvim*,#{pane_current_command}},\u{e62b},\
+#{?#{m:nano*,#{pane_current_command}},\u{eae9},\
+#{?#{m:emacs*,#{pane_current_command}},\u{eae9},\
+#{?#{m:hx*,#{pane_current_command}},\u{eae9},\
+#{?#{m:ssh*,#{pane_current_command}},\u{f817},\
+#{?#{m:git*,#{pane_current_command}},\u{e702},\
+#{?#{m:node*,#{pane_current_command}},\u{e718},\
+#{?#{m:python*,#{pane_current_command}},\u{e73c},\
+#{?#{m:python3*,#{pane_current_command}},\u{e73c},\
+#{?#{m:ruby*,#{pane_current_command}},\u{e739},\
+#{?#{m:cargo*,#{pane_current_command}},\u{e7a8},\
+#{?#{m:rustc*,#{pane_current_command}},\u{e7a8},\
+#{?#{m:docker*,#{pane_current_command}},\u{f308},\
+#{?#{m:htop*,#{pane_current_command}},\u{eae8},\
+#{?#{m:top*,#{pane_current_command}},\u{eae8},\
+#{?#{m:btop*,#{pane_current_command}},\u{eae8},\
+#{?#{m:tail*,#{pane_current_command}},\u{f0f6},\
+#{?#{m:claude*,#{pane_current_command}},\u{f0631},\
+#{?#{m:bash*,#{pane_current_command}},\u{f120},\
+#{?#{m:zsh*,#{pane_current_command}},\u{f120},\
+#{?#{m:fish*,#{pane_current_command}},\u{f120},\
+#{?#{m:sh*,#{pane_current_command}},\u{f120},\
+\u{f120}}}}}}}}}}}}}}}}}}}}}}}}";
+
+/// Per-pane top strip used when `status.position: both`.
+/// The active vs inactive colour split comes from the tmux options
+/// `pane-active-border-style` / `pane-border-style` (set in `theme_from`),
+/// so the format string itself can stay flat — no `#{?pane_active,...}`
+/// nesting. That matters because the nested `#{m:pattern,value}` icon
+/// dispatch contains commas that would otherwise terminate an outer
+/// ternary early and blank the whole strip.
+fn build_pane_border_top(p: &Palette) -> String {
     let git_seg = if p.git {
         format!(
-            "#[fg={fg},bg={dim}]#(~/.sessionx/segments/sx-git-status.sh #{{pane_current_path}}) #[fg={bg},bg={dim}]│ ",
+            "#[fg={fg},bg={dim}]#(~/.sessionx/segments/sx-git-status.sh #{{pane_current_path}}) ",
             fg = p.fg,
             dim = p.dim,
-            bg = p.bg,
         )
     } else {
         String::new()
     };
+    // Show pane_current_path when pane_title still equals the default
+    // (host short-name #h or full #H — tmux's initial value); otherwise
+    // honour whatever set-pane -T / OSC 2 set the title to.
     format!(
-        "#[fg={dim},bg={bg}]{git}\
-         #[fg={fg},bg={dim}]%m-%d-%Y \
-         #[fg={accent2}]• \
-         #[fg={fg}]%I:%M %p ",
+        "#[bg={dim}]\
+         #[align=left,bg={dim}] {icon} #{{?#{{||:#{{==:#{{pane_title}},#h}},#{{==:#{{pane_title}},#H}}}},#{{b:pane_current_path}},#{{pane_title}}}} (#{{pane_current_command}}) \
+         #[align=right,bg={dim}]{git}",
         dim = p.dim,
-        bg = p.bg,
-        fg = p.fg,
-        accent2 = p.accent2,
-        git = git_seg
+        icon = PANE_CMD_ICON,
+        git = git_seg,
     )
 }
 
@@ -309,10 +363,28 @@ fn theme_from(p: Palette, mut style: BTreeMap<String, String>) -> Theme {
     let win = build_window_format(&p);
     let cur = build_current_window_format(&p);
     let right = build_right(&p);
+    let top = build_pane_border_top(&p);
     s(
         &mut style,
         "status-style",
         &format!("bg={},fg={}", p.bg, p.fg),
+    );
+    // Heavier border glyphs give the top strip more visual weight against
+    // pane content sitting directly underneath it.
+    s(&mut style, "pane-border-lines", "heavy");
+    // Border styles double as the base colour for the top-strip text when
+    // `pane-border-status` is active. Inactive pane → muted on dim bg;
+    // active pane → accent on dim bg, bold for emphasis. The format string
+    // overlays its own bg=dim where needed but otherwise inherits these.
+    s(
+        &mut style,
+        "pane-border-style",
+        &format!("fg={},bg={}", p.badge, p.dim),
+    );
+    s(
+        &mut style,
+        "pane-active-border-style",
+        &format!("fg={},bg={},bold", p.accent, p.dim),
     );
     Theme {
         style,
@@ -321,6 +393,7 @@ fn theme_from(p: Palette, mut style: BTreeMap<String, String>) -> Theme {
         window_format: Some(win),
         current_window_format: Some(cur),
         status_interval: Some(5),
+        pane_border_top: Some(top),
         builtin_segments: shared_segments(),
     }
 }
@@ -512,7 +585,7 @@ fn minimal() -> Theme {
         "message-style",
         "bg=colour250,fg=colour234,bold",
     );
-    theme_from(
+    let mut t = theme_from(
         Palette {
             bg: "colour234",
             fg: "colour252",
@@ -526,5 +599,8 @@ fn minimal() -> Theme {
             git: false,
         },
         style,
-    )
+    );
+    // Minimal opts out of the per-pane top strip — single-line by design.
+    t.pane_border_top = None;
+    t
 }

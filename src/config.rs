@@ -107,6 +107,10 @@ pub struct StatusSpec {
     pub window_id_style: Option<String>,
     /// Glyph style for the per-window pane count.
     pub pane_id_style: Option<String>,
+    /// Where the status bar lives: `bottom` (default), `top`, or `both`.
+    /// `both` keeps the regular bottom status line and adds a per-pane
+    /// strip on the top border via tmux's `pane-border-status`.
+    pub position: Option<String>,
 }
 
 fn default_true() -> bool {
