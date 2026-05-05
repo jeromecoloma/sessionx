@@ -10,6 +10,16 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Added
+- `sx`, `sxl`, `sxa`, `sxk` shell helpers (bash/zsh/fish) shipped in
+  `shell/sessionx-helpers.{sh,fish}`. `sx` is a passthrough shortcut
+  for `sessionx`; `sxl` lists every managed session globally; `sxa`
+  attaches and `sxk` removes, both with an `fzf` picker fallback when
+  no name is given. zsh tab-completion of managed session names is
+  registered for `sxa`/`sxk`, and `sx` inherits `sessionx`'s
+  completion. `install.sh` offers to source the helpers from your
+  shell rc.
+
 ## [0.1.3] - 2026-05-03
 
 ### Added
