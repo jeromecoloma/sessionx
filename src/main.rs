@@ -256,9 +256,9 @@ fn print_shell_init(shell: &str) -> Result<()> {
     // completion registered otherwise.
     match shell {
         "zsh" => {
-            print!("autoload -Uz compinit && compinit -u 2>/dev/null\n");
+            println!("autoload -Uz compinit && compinit -u 2>/dev/null");
             print!("{}", include_str!("../completions/_sessionx"));
-            print!("compdef _sessionx sessionx\n");
+            println!("compdef _sessionx sessionx");
         }
         "bash" => {
             print!("{}", include_str!("../completions/sessionx.bash"));
