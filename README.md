@@ -197,11 +197,18 @@ Supported shells: `bash`, `zsh`, `fish`. Completions are dynamic — `rm <TAB>` 
 A tmux-style helper trio — analogous to `tml`/`tma`/`tmk` but backed by sessionx. With no arg, `sxa`/`sxk` open an `fzf` picker over every managed session globally; with an arg they pass straight through.
 
 ```sh
-# zsh / bash
-source /path/to/sessionx/shell/sessionx-helpers.sh
+# zsh / bash — works with `cargo install sessionx` (no repo needed)
+eval "$(sessionx shell-init zsh)"     # or `bash`
 
 # fish
-source /path/to/sessionx/shell/sessionx-helpers.fish
+sessionx shell-init fish | source
+```
+
+If you cloned the repo you can also source the file directly:
+
+```sh
+source /path/to/sessionx/shell/sessionx-helpers.sh     # zsh / bash
+source /path/to/sessionx/shell/sessionx-helpers.fish   # fish
 ```
 
 | Helper | Equivalent |

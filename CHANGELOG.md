@@ -10,6 +10,12 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Added
+- `sessionx shell-init <bash|zsh|fish>` prints the `sx`/`sxl`/`sxa`/`sxk`
+  helpers (and zsh completions) for `eval`. Lets `cargo install sessionx`
+  users wire up the shortcuts without cloning the repo:
+  `eval "$(sessionx shell-init zsh)"`.
+
 ## [0.1.7] - 2026-05-05
 
 ### Changed

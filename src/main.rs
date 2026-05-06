@@ -90,6 +90,11 @@ enum Cmd {
     },
     /// Print shell completions to stdout (bash, zsh, fish)
     Completions { shell: String },
+    /// Print shell helpers (sx/sxl/sxa/sxk) for `eval`. Supports bash, zsh, fish.
+    ///
+    /// Usage: add `eval "$(sessionx shell-init zsh)"` to your ~/.zshrc.
+    #[command(name = "shell-init")]
+    ShellInit { shell: String },
     /// List built-in status-bar themes
     Themes,
     /// Manage the global config (`~/.config/sessionx/config.yaml`).
@@ -162,6 +167,7 @@ fn main() -> Result<()> {
         Some(Cmd::Open { name, names_only }) => cmd::open::run(name.as_deref(), names_only),
         Some(Cmd::Rm { name, force }) => cmd::rm::run(&name, force),
         Some(Cmd::Completions { shell }) => print_completions(&shell),
+        Some(Cmd::ShellInit { shell }) => print_shell_init(&shell),
         Some(Cmd::Themes) => {
             for t in themes::list() {
                 println!("{t}");
@@ -233,6 +239,16 @@ fn print_completions(shell: &str) -> Result<()> {
         "bash" => include_str!("../completions/sessionx.bash"),
         "fish" => include_str!("../completions/sessionx.fish"),
         other => return Err(anyhow!("unsupported shell: {other} (try zsh|bash|fish)")),
+    };
+    print!("{body}");
+    Ok(())
+}
+
+fn print_shell_init(shell: &str) -> Result<()> {
+    let body = match shell {
+        "bash" | "zsh" | "sh" => include_str!("../shell/sessionx-helpers.sh"),
+        "fish" => include_str!("../shell/sessionx-helpers.fish"),
+        other => return Err(anyhow!("unsupported shell: {other} (try bash|zsh|fish)")),
     };
     print!("{body}");
     Ok(())
