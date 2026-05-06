@@ -7,12 +7,15 @@ use crate::{cmd, config, picker, status, themes, tmux};
 use tmux::ManagedSession;
 
 const DEFAULT_HANDLE: &str = "main";
+const ROOT_HANDLE: &str = "root";
 
 enum Action {
     Attach,
+    AttachRoot,
     AttachWorktree,
     Init,
     Open(String),
+    OpenPlain(String),
     PlainTmux,
     Quit,
 }
@@ -34,13 +37,23 @@ pub fn run() -> Result<()> {
     let loaded = config::find_and_load().ok();
     let cwd = std::env::current_dir()?;
     let in_git = is_git_repo(&cwd);
-    let managed = tmux::list_managed_sessions().unwrap_or_default();
+    let mut managed = tmux::list_managed_sessions().unwrap_or_default();
+
+    // Group: current project's managed sessions first, then others.
+    if let Some(l) = &loaded {
+        let here = l.project_root.display().to_string();
+        managed.sort_by_key(|m| if m.project == here { 0 } else { 1 });
+    }
 
     let mut labels: Vec<String> = vec![];
     let mut actions: Vec<Action> = vec![];
 
     if let Some(l) = &loaded {
         if l.worktree_mode() {
+            labels.push(format!(
+                "Attach/create main project session ({ROOT_HANDLE})"
+            ));
+            actions.push(Action::AttachRoot);
             labels.push("Add new worktree session…".to_string());
             actions.push(Action::AttachWorktree);
         } else {
@@ -52,9 +65,21 @@ pub fn run() -> Result<()> {
         actions.push(Action::Init);
     }
 
+    let here = loaded.as_ref().map(|l| l.project_root.display().to_string());
     for m in &managed {
-        labels.push(format!("Open managed session: {}  [{}]", m.name, m.project));
+        let label = if here.as_deref() == Some(m.project.as_str()) {
+            format!("Open managed session: {}", m.name)
+        } else {
+            format!("Open managed session: {}  [{}]", m.name, m.project)
+        };
+        labels.push(label);
         actions.push(Action::Open(m.name.clone()));
+    }
+
+    let unmanaged = tmux::list_unmanaged_sessions().unwrap_or_default();
+    for name in &unmanaged {
+        labels.push(format!("Attach plain tmux session: {name}"));
+        actions.push(Action::OpenPlain(name.clone()));
     }
 
     labels.push("New plain tmux session".to_string());
@@ -63,42 +88,63 @@ pub fn run() -> Result<()> {
     labels.push("Quit".to_string());
     actions.push(Action::Quit);
 
-    let (expect_keys, header): (&[&str], Option<&str>) = if managed.is_empty() {
-        (&[], None)
-    } else {
-        (
-            &["ctrl-x"],
-            Some("enter: select  ·  ctrl-x: delete managed session"),
-        )
-    };
+    let (expect_keys, header): (&[&str], Option<&str>) =
+        if managed.is_empty() && unmanaged.is_empty() {
+            (&[], None)
+        } else {
+            (
+                &["ctrl-x"],
+                Some("enter: select  ·  ctrl-x: delete session"),
+            )
+        };
     let Some((idx, key)) = picker::select_with_keys("sessionx", &labels, expect_keys, header)?
     else {
         return Ok(());
     };
 
     if key.as_deref() == Some("ctrl-x") {
-        if let Action::Open(name) = &actions[idx] {
-            if let Some(m) = managed.iter().find(|m| &m.name == name) {
-                return delete_managed(m);
+        match &actions[idx] {
+            Action::Open(name) => {
+                if let Some(m) = managed.iter().find(|m| &m.name == name) {
+                    return delete_managed(m);
+                }
             }
+            Action::OpenPlain(name) => {
+                return delete_plain(name);
+            }
+            _ => {}
         }
-        eprintln!("sessionx: ctrl-x only deletes managed sessions");
+        eprintln!("sessionx: ctrl-x only deletes existing sessions");
         return Ok(());
     }
 
     match &actions[idx] {
-        Action::Attach => cmd::add::run(DEFAULT_HANDLE, None, true),
+        Action::Attach => cmd::add::run(DEFAULT_HANDLE, None, true, false),
+        Action::AttachRoot => cmd::add::run(ROOT_HANDLE, None, true, true),
         Action::AttachWorktree => {
             let Some(handle) = picker::prompt("worktree handle (e.g. feat-x)")? else {
                 return Ok(());
             };
-            cmd::add::run(&handle, None, true)
+            cmd::add::run(&handle, None, true, false)
         }
         Action::Init => cmd::init::run(cmd::init::InitOpts::default()),
         Action::Open(name) => cmd::open::run(Some(name), false),
+        Action::OpenPlain(name) => tmux::attach_or_switch(name),
         Action::PlainTmux => plain_tmux(&cwd),
         Action::Quit => Ok(()),
     }
+}
+
+fn delete_plain(name: &str) -> Result<()> {
+    let msg = format!("Kill plain tmux session '{name}'?");
+    if !picker::confirm(&msg, false)? {
+        return Ok(());
+    }
+    if tmux::has_session(name) {
+        tmux::kill_session(name)?;
+        println!("killed session {name}");
+    }
+    Ok(())
 }
 
 fn delete_managed(m: &ManagedSession) -> Result<()> {

@@ -218,6 +218,27 @@ pub struct ManagedSession {
     pub handle: String,
 }
 
+pub fn list_unmanaged_sessions() -> Result<Vec<String>> {
+    if !run_quiet(&["info"]) {
+        return Ok(vec![]);
+    }
+    let fmt = "#{session_name}\t#{@sessionx-managed}";
+    let out = run(&["list-sessions", "-F", fmt])?;
+    Ok(out
+        .lines()
+        .filter_map(|line| {
+            let mut it = line.split('\t');
+            let name = it.next()?.to_string();
+            let managed = it.next().unwrap_or("");
+            if !name.is_empty() && managed != "1" {
+                Some(name)
+            } else {
+                None
+            }
+        })
+        .collect())
+}
+
 pub fn list_managed_sessions() -> Result<Vec<ManagedSession>> {
     if !run_quiet(&["info"]) {
         return Ok(vec![]);

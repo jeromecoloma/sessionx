@@ -64,6 +64,10 @@ enum Cmd {
         base: Option<String>,
         #[arg(long)]
         no_attach: bool,
+        /// In worktree-mode projects, attach at the project root instead of
+        /// creating a worktree. Skips post_create hooks.
+        #[arg(long)]
+        root: bool,
     },
     /// List sessions managed by sessionx in the current project
     Ls {
@@ -162,7 +166,8 @@ fn main() -> Result<()> {
             name,
             base,
             no_attach,
-        }) => cmd::add::run(&name, base.as_deref(), !no_attach),
+            root,
+        }) => cmd::add::run(&name, base.as_deref(), !no_attach, root),
         Some(Cmd::Ls { names_only, all }) => cmd::ls::run(names_only, all),
         Some(Cmd::Open { name, names_only }) => cmd::open::run(name.as_deref(), names_only),
         Some(Cmd::Rm { name, force }) => cmd::rm::run(&name, force),

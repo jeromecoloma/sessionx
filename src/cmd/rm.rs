@@ -48,16 +48,29 @@ fn run_inner(
     session_override: Option<&str>,
     force: bool,
 ) -> Result<()> {
-    let session = session_override
-        .map(str::to_string)
-        .unwrap_or_else(|| loaded.session_name(handle));
+    let session = session_override.map(str::to_string).unwrap_or_else(|| {
+        // The session may have been renamed at creation time (see
+        // picker::maybe_rename_long in `add`), so prefix+handle isn't reliable.
+        // Prefer the actual session tagged with this handle for our project.
+        let project = loaded.project_root.display().to_string();
+        tmux::list_managed_sessions()
+            .unwrap_or_default()
+            .into_iter()
+            .find(|m| m.handle == handle && m.project == project)
+            .map(|m| m.name)
+            .unwrap_or_else(|| loaded.session_name(handle))
+    });
 
     let worktree_path = if loaded.worktree_mode() {
         worktree::worktree_path(loaded, handle).ok()
     } else {
         None
     };
-    let branch = if loaded.worktree_mode() {
+    // Treat as a root-mode teardown when worktree-mode is on but no worktree
+    // exists on disk for this handle (e.g. the "root" main-project session).
+    let has_worktree_on_disk = worktree_path.as_ref().is_some_and(|p| p.exists());
+    let is_root_session = loaded.worktree_mode() && !has_worktree_on_disk;
+    let branch = if loaded.worktree_mode() && !is_root_session {
         Some(worktree::handle_to_branch(
             handle,
             loaded.config.worktree_naming,
@@ -67,21 +80,22 @@ fn run_inner(
     };
 
     // pre_remove hooks run from the worktree (or project root in plain mode).
-    let hook_cwd = worktree_path
-        .clone()
-        .filter(|p| p.exists())
-        .unwrap_or_else(|| loaded.project_root.clone());
-    let env = hooks::HookEnv {
-        vars: hooks::base_env(
-            &loaded.project_root,
-            handle,
-            &session,
-            worktree_path.as_deref(),
-            branch.as_deref(),
-        ),
-        cwd: hook_cwd,
-    };
-    if !loaded.config.pre_remove.is_empty() {
+    // Skip them entirely for root sessions — they're worktree-specific.
+    if !is_root_session && !loaded.config.pre_remove.is_empty() {
+        let hook_cwd = worktree_path
+            .clone()
+            .filter(|p| p.exists())
+            .unwrap_or_else(|| loaded.project_root.clone());
+        let env = hooks::HookEnv {
+            vars: hooks::base_env(
+                &loaded.project_root,
+                handle,
+                &session,
+                worktree_path.as_deref(),
+                branch.as_deref(),
+            ),
+            cwd: hook_cwd,
+        };
         hooks::run_all("pre_remove", &loaded.config.pre_remove, &env)?;
     }
 
@@ -93,7 +107,7 @@ fn run_inner(
         false
     };
 
-    let removed_worktree = if loaded.worktree_mode() {
+    let removed_worktree = if loaded.worktree_mode() && !is_root_session {
         worktree::remove(loaded, handle, force)?;
         if let Some(p) = &worktree_path {
             println!("removed worktree {}", p.display());

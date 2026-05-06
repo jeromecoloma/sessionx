@@ -4,7 +4,7 @@ use std::path::Path;
 use crate::config::{self, Config, Loaded, PaneSpec, SplitDir};
 use crate::{agent, hooks, picker, status, tmux, worktree};
 
-pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
+pub fn run(handle: &str, base: Option<&str>, attach: bool, force_root: bool) -> Result<()> {
     if tmux::in_sessionx() && std::env::var("SESSIONX_ALLOW_NESTED").is_err() {
         return Err(anyhow!(
             "already running inside a sessionx-attached tmux session; \
@@ -30,8 +30,10 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
         tmux::has_session,
     )?;
 
-    // 1. Worktree (if applicable)
-    let (work_cwd, branch) = if loaded.worktree_mode() {
+    // 1. Worktree (if applicable). `force_root` skips worktree creation even
+    //    in worktree-mode projects — used for "main project session" attach.
+    let use_worktree = loaded.worktree_mode() && !force_root;
+    let (work_cwd, branch) = if use_worktree {
         if !worktree::is_git_repo(&loaded.project_root) {
             return Err(anyhow!(
                 "worktree_dir set but {} is not a git repository",
@@ -51,11 +53,7 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
         &loaded.project_root,
         handle,
         &session,
-        if loaded.worktree_mode() {
-            Some(&work_cwd)
-        } else {
-            None
-        },
+        if use_worktree { Some(&work_cwd) } else { None },
         branch.as_deref(),
     );
     env_vars.extend(status::icon_env(&loaded.config.status));
@@ -63,7 +61,10 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool) -> Result<()> {
         vars: env_vars,
         cwd: work_cwd.clone(),
     };
-    if !loaded.config.post_create.is_empty() {
+    // Skip post_create when attaching the project root in worktree mode
+    // (force_root) — hooks like Herd setup are worktree-specific.
+    let skip_hooks = loaded.worktree_mode() && force_root;
+    if !skip_hooks && !loaded.config.post_create.is_empty() {
         hooks::run_all("post_create", &loaded.config.post_create, &hook_env)?;
     }
 

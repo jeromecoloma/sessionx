@@ -20,9 +20,14 @@ pub fn run(name: Option<&str>, names_only: bool) -> Result<()> {
         return tmux::attach_or_switch(name);
     }
 
+    // Fall back to attaching a plain (unmanaged) tmux session by exact name.
+    if tmux::has_session(name) {
+        return tmux::attach_or_switch(name);
+    }
+
     let candidates: Vec<&str> = managed.iter().map(|m| m.name.as_str()).collect();
     Err(anyhow!(
-        "no managed session named '{name}'. Candidates: {}",
+        "no session named '{name}'. Managed candidates: {}",
         if candidates.is_empty() {
             "(none)".to_string()
         } else {
