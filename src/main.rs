@@ -245,11 +245,26 @@ fn print_completions(shell: &str) -> Result<()> {
 }
 
 fn print_shell_init(shell: &str) -> Result<()> {
-    let body = match shell {
-        "bash" | "zsh" | "sh" => include_str!("../shell/sessionx-helpers.sh"),
+    let helpers = match shell {
+        "bash" | "sh" => include_str!("../shell/sessionx-helpers.sh"),
+        "zsh" => include_str!("../shell/sessionx-helpers.sh"),
         "fish" => include_str!("../shell/sessionx-helpers.fish"),
         other => return Err(anyhow!("unsupported shell: {other} (try bash|zsh|fish)")),
     };
-    print!("{body}");
+    // For zsh, bundle the completion script so `compdef sx=sessionx` in the
+    // helpers actually finds something. cargo-install users don't have the
+    // completion registered otherwise.
+    match shell {
+        "zsh" => {
+            print!("autoload -Uz compinit && compinit -u 2>/dev/null\n");
+            print!("{}", include_str!("../completions/_sessionx"));
+            print!("compdef _sessionx sessionx\n");
+        }
+        "bash" => {
+            print!("{}", include_str!("../completions/sessionx.bash"));
+        }
+        _ => {}
+    }
+    print!("{helpers}");
     Ok(())
 }

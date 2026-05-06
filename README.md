@@ -194,7 +194,7 @@ Supported shells: `bash`, `zsh`, `fish`. Completions are dynamic — `rm <TAB>` 
 
 ## Shell helpers (sxl / sxa / sxk)
 
-A tmux-style helper trio — analogous to `tml`/`tma`/`tmk` but backed by sessionx. With no arg, `sxa`/`sxk` open an `fzf` picker over every managed session globally; with an arg they pass straight through.
+Short shell wrappers for the most common sessionx commands. With no arg, `sxa`/`sxk` open an `fzf` picker over every managed session globally; with an arg they pass straight through.
 
 ```sh
 # zsh / bash — works with `cargo install sessionx` (no repo needed)

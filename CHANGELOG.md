@@ -10,6 +10,12 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Fixed
+- `sessionx shell-init zsh|bash` now bundles the completion script
+  inline, so `compdef sx=sessionx` (in the helpers) works for users who
+  installed via `cargo install sessionx` and never registered the static
+  completion file.
+
 ## [0.1.8] - 2026-05-06
 
 ### Added
