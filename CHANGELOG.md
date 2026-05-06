@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-05-06
+
 ### Added
 - `sessionx shell-init <bash|zsh|fish>` prints the `sx`/`sxl`/`sxa`/`sxk`
   helpers (and zsh completions) for `eval`. Lets `cargo install sessionx`
@@ -127,7 +129,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.7...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.8...HEAD
+[0.1.8]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.8
 [0.1.7]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.7
 [0.1.6]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.6
 [0.1.5]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.5
