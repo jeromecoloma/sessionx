@@ -111,7 +111,19 @@ pub fn remove(loaded: &Loaded, handle: &str, force: bool) -> Result<()> {
         args.push("--force");
     }
     args.push(&path_s);
-    git(&loaded.project_root, &args)?;
+    match git(&loaded.project_root, &args) {
+        Ok(_) => {}
+        Err(e) if force && is_not_a_worktree(&e) => {
+            // Stale on-disk dir not registered with git (e.g. created via `mkdir`
+            // or left behind after a prior partial removal). Force-mode means
+            // the user has explicitly opted into destruction — wipe the dir and
+            // prune any dangling registration.
+            std::fs::remove_dir_all(&path)
+                .with_context(|| format!("rm -rf {} after git refused", path.display()))?;
+            let _ = git(&loaded.project_root, &["worktree", "prune"]);
+        }
+        Err(e) => return Err(e),
+    }
     let branch = handle_to_branch(handle, loaded.config.worktree_naming);
     // Best-effort branch delete; ignore failure (e.g. unmerged without force).
     let _ = git(
@@ -119,6 +131,10 @@ pub fn remove(loaded: &Loaded, handle: &str, force: bool) -> Result<()> {
         &["branch", if force { "-D" } else { "-d" }, &branch],
     );
     Ok(())
+}
+
+fn is_not_a_worktree(err: &anyhow::Error) -> bool {
+    err.to_string().contains("is not a working tree")
 }
 
 fn apply_files(loaded: &Loaded, dest: &Path) -> Result<()> {
