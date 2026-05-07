@@ -16,6 +16,7 @@ enum Action {
     Init,
     Open(String),
     OpenPlain(String),
+    OrphanWorktree(String),
     PlainTmux,
     Quit,
 }
@@ -102,6 +103,15 @@ pub fn run() -> Result<()> {
         actions.push(Action::Open(m.name.clone()));
     }
 
+    if let Some(l) = &loaded {
+        for handle in orphan_worktrees(l, &managed) {
+            labels.push(format!(
+                "Clean up orphan worktree: {handle}  \x1b[2m[no session]\x1b[0m"
+            ));
+            actions.push(Action::OrphanWorktree(handle));
+        }
+    }
+
     let unmanaged = tmux::list_unmanaged_sessions().unwrap_or_default();
     for name in &unmanaged {
         labels.push(format!("Attach plain tmux session: {name}"));
@@ -138,6 +148,9 @@ pub fn run() -> Result<()> {
             Action::OpenPlain(name) => {
                 return delete_plain(name);
             }
+            Action::OrphanWorktree(handle) => {
+                return delete_orphan_worktree(loaded.as_ref(), handle);
+            }
             _ => {}
         }
         eprintln!("sessionx: ctrl-x only deletes existing sessions");
@@ -156,9 +169,61 @@ pub fn run() -> Result<()> {
         Action::Init => cmd::init::run(cmd::init::InitOpts::default()),
         Action::Open(name) => cmd::open::run(Some(name), false),
         Action::OpenPlain(name) => tmux::attach_or_switch(name),
+        Action::OrphanWorktree(handle) => delete_orphan_worktree(loaded.as_ref(), handle),
         Action::PlainTmux => plain_tmux(&cwd),
         Action::Quit => Ok(()),
     }
+}
+
+fn orphan_worktrees(loaded: &config::Loaded, managed: &[ManagedSession]) -> Vec<String> {
+    if !loaded.worktree_mode() {
+        return vec![];
+    }
+    let Some(dir) = loaded.config.worktree_dir.as_deref() else {
+        return vec![];
+    };
+    let base = std::path::Path::new(dir);
+    let abs = if base.is_absolute() {
+        base.to_path_buf()
+    } else {
+        loaded.project_root.join(base)
+    };
+    let Ok(entries) = std::fs::read_dir(&abs) else {
+        return vec![];
+    };
+    let here = loaded.project_root.display().to_string();
+    let mut active: std::collections::HashSet<String> = std::collections::HashSet::new();
+    for m in managed {
+        if m.project == here {
+            active.insert(m.handle.clone());
+        }
+    }
+    let mut out = vec![];
+    for e in entries.flatten() {
+        if !e.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+            continue;
+        }
+        let Some(name) = e.file_name().to_str().map(|s| s.to_string()) else {
+            continue;
+        };
+        if !active.contains(&name) {
+            out.push(name);
+        }
+    }
+    out.sort();
+    out
+}
+
+fn delete_orphan_worktree(loaded: Option<&config::Loaded>, handle: &str) -> Result<()> {
+    let Some(loaded) = loaded else {
+        eprintln!("sessionx: no project config in cwd — cannot clean orphan");
+        return Ok(());
+    };
+    let msg = format!("Force-remove orphan worktree '{handle}'?");
+    if !picker::confirm(&msg, false)? {
+        return Ok(());
+    }
+    cmd::rm::run_with_loaded(loaded, handle, true)
 }
 
 fn delete_plain(name: &str) -> Result<()> {

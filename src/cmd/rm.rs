@@ -35,7 +35,33 @@ pub fn run(arg: &str, force: bool) -> Result<()> {
         }
     }
     let loaded = config::find_and_load()?;
-    run_with_loaded(&loaded, arg, force)
+    // Recover from a partial teardown: if a previous `sxk` killed the tmux
+    // session but failed to remove the worktree (e.g. untracked files without
+    // --force), the managed-session record is gone. The user may now be
+    // passing either the handle or the full session name. Probe both against
+    // worktree paths on disk so `sxk <name> --force` can finish the job.
+    let handle = resolve_orphan_handle(&loaded, arg).unwrap_or_else(|| arg.to_string());
+    run_with_loaded(&loaded, &handle, force)
+}
+
+fn resolve_orphan_handle(loaded: &config::Loaded, arg: &str) -> Option<String> {
+    if !loaded.worktree_mode() {
+        return None;
+    }
+    if let Ok(p) = worktree::worktree_path(loaded, arg) {
+        if p.exists() {
+            return Some(arg.to_string());
+        }
+    }
+    let prefix = loaded.session_prefix();
+    if let Some(stripped) = arg.strip_prefix(&prefix) {
+        if let Ok(p) = worktree::worktree_path(loaded, stripped) {
+            if p.exists() {
+                return Some(stripped.to_string());
+            }
+        }
+    }
+    None
 }
 
 pub fn run_with_loaded(loaded: &config::Loaded, handle: &str, force: bool) -> Result<()> {
