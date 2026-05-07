@@ -10,6 +10,14 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Fixed
+- `sessionx rm <name> [--force]` recovers from a partial teardown where the
+  tmux session was killed but the worktree removal failed (e.g. untracked
+  files without `--force`). Accepts either a handle or the full session name.
+- `sessionx` interactive picker now lists leftover worktrees in the current
+  project as **Clean up orphan worktree** entries; enter or `ctrl-x` prompts
+  to force-remove.
+
 ## [0.1.9] - 2026-05-06
 
 ### Fixed

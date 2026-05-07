@@ -32,6 +32,6 @@ allow-branch = ["main"]
 # the previous tagged version is.
 pre-release-replacements = [
     { file = "CHANGELOG.md", search = "## \\[Unreleased\\]", replace = "## [Unreleased]\n\n## [{{version}}] - {{date}}", exactly = 1 },
-    { file = "CHANGELOG.md", search = "v0\\.1\\.8\\.\\.\\.HEAD", replace = "v{{version}}...HEAD", exactly = 1 },
-    { file = "CHANGELOG.md", search = "\\[0\\.1\\.8\\]: https://github.com/jeromecoloma/sessionx/releases/tag/v0\\.1\\.8", replace = "[{{version}}]: https://github.com/jeromecoloma/sessionx/releases/tag/v{{version}}\n[0.1.8]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.8", exactly = 1 },
+    { file = "CHANGELOG.md", search = "v0\\.1\\.9\\.\\.\\.HEAD", replace = "v{{version}}...HEAD", exactly = 1 },
+    { file = "CHANGELOG.md", search = "\\[0\\.1\\.9\\]: https://github.com/jeromecoloma/sessionx/releases/tag/v0\\.1\\.9", replace = "[{{version}}]: https://github.com/jeromecoloma/sessionx/releases/tag/v{{version}}\n[0.1.9]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.9", exactly = 1 },
 ]
