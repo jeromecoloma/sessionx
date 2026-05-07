@@ -69,6 +69,7 @@ Run `sessionx` with no subcommand to get a context-aware menu:
 - **Attach/create project session** — when `.sessionx.yaml` is found
 - **Init `.sessionx.yaml` here** — when in a git repo without a config
 - **Open managed session** — any sessionx-managed session, across projects
+- **Clean up orphan worktree** — leftover worktrees from a failed teardown (current project only)
 - **New plain tmux session** — auto-named, untracked
 
 The picker uses [`fzf`](https://github.com/junegunn/fzf) when installed, otherwise falls back to a built-in TUI. The installer offers to install fzf via Homebrew on macOS.
@@ -168,7 +169,7 @@ The default `.sessionx.yaml` template ships an `agent` window with `command: <ag
 | `sessionx add <name> [--base <ref>] [--no-attach]` | Create + attach. |
 | `sessionx ls [--all] [--names-only]` | List sessions for this project; `--all` lists every managed session globally. |
 | `sessionx open [<session>]` | Attach to any sessionx-managed session globally. No arg prints the list. Works from any cwd. |
-| `sessionx rm <name> [--force]` | Tear down. |
+| `sessionx rm <name> [--force]` | Tear down. Accepts a handle or full session name; recovers leftover worktrees if a previous run failed mid-teardown. |
 | `sessionx themes` | List built-in status-bar themes (one per line). |
 | `sessionx theme` | Show current theme + available themes (current marked `*`). |
 | `sessionx theme set <name> [--no-apply] [--session <s>]` | Rewrite `status.theme:` in `.sessionx.yaml` and live-apply to current tmux session. |
