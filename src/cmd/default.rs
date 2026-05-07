@@ -88,7 +88,9 @@ pub fn run() -> Result<()> {
         actions.push(Action::Init);
     }
 
-    let here = loaded.as_ref().map(|l| l.project_root.display().to_string());
+    let here = loaded
+        .as_ref()
+        .map(|l| l.project_root.display().to_string());
     for m in &managed {
         let is_local = here.as_deref() == Some(m.project.as_str());
         let label = if is_local {
