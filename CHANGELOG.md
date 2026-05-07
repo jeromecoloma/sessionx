@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.10] - 2026-05-07
+
 ### Fixed
 - `sessionx rm <name> [--force]` recovers from a partial teardown where the
   tmux session was killed but the worktree removal failed (e.g. untracked
@@ -145,7 +147,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.9...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.10...HEAD
+[0.1.10]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.10
 [0.1.9]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.9
 [0.1.8]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.8
 [0.1.7]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.7
