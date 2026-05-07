@@ -26,37 +26,59 @@ pub fn run() -> Result<()> {
         std::process::exit(2);
     }
 
-    if tmux::in_sessionx() && std::env::var("SESSIONX_ALLOW_NESTED").is_err() {
-        eprintln!(
-            "sessionx: already running inside a sessionx-attached tmux session. \
-             Set SESSIONX_ALLOW_NESTED=1 to override."
-        );
-        std::process::exit(2);
-    }
+    // Note: we don't bail out when already inside a sessionx-attached session.
+    // Switching to another project's session via switch-client is always safe;
+    // creation paths (Attach/AttachRoot/AttachWorktree) enforce their own
+    // nesting guard inside `cmd::add::run`.
 
     let loaded = config::find_and_load().ok();
     let cwd = std::env::current_dir()?;
     let in_git = is_git_repo(&cwd);
     let mut managed = tmux::list_managed_sessions().unwrap_or_default();
 
-    // Group: current project's managed sessions first, then others.
+    // Group: current project's managed sessions first (root before others),
+    // then sessions from other projects.
     if let Some(l) = &loaded {
         let here = l.project_root.display().to_string();
-        managed.sort_by_key(|m| if m.project == here { 0 } else { 1 });
+        managed.sort_by_key(|m| {
+            let local = m.project == here;
+            let is_root = m.handle == ROOT_HANDLE;
+            match (local, is_root) {
+                (true, true) => 0,
+                (true, false) => 1,
+                (false, _) => 2,
+            }
+        });
     }
+
+    // Hide the "Attach/create..." entries when the corresponding session
+    // already exists for this project — the user can just open it.
+    let (root_exists, main_exists) = if let Some(l) = &loaded {
+        let here = l.project_root.display().to_string();
+        let has = |handle: &str| {
+            managed
+                .iter()
+                .any(|m| m.project == here && m.handle == handle)
+        };
+        (has(ROOT_HANDLE), has(DEFAULT_HANDLE))
+    } else {
+        (false, false)
+    };
 
     let mut labels: Vec<String> = vec![];
     let mut actions: Vec<Action> = vec![];
 
     if let Some(l) = &loaded {
         if l.worktree_mode() {
-            labels.push(format!(
-                "Attach/create main project session ({ROOT_HANDLE})"
-            ));
-            actions.push(Action::AttachRoot);
+            if !root_exists {
+                labels.push(format!(
+                    "Attach/create main project session ({ROOT_HANDLE})"
+                ));
+                actions.push(Action::AttachRoot);
+            }
             labels.push("Add new worktree session…".to_string());
             actions.push(Action::AttachWorktree);
-        } else {
+        } else if !main_exists {
             labels.push(format!("Attach/create project session ({DEFAULT_HANDLE})"));
             actions.push(Action::Attach);
         }
@@ -67,10 +89,14 @@ pub fn run() -> Result<()> {
 
     let here = loaded.as_ref().map(|l| l.project_root.display().to_string());
     for m in &managed {
-        let label = if here.as_deref() == Some(m.project.as_str()) {
+        let is_local = here.as_deref() == Some(m.project.as_str());
+        let label = if is_local {
             format!("Open managed session: {}", m.name)
         } else {
-            format!("Open managed session: {}  [{}]", m.name, m.project)
+            format!(
+                "Open managed session: {}  \x1b[2m[{}]\x1b[0m",
+                m.name, m.project
+            )
         };
         labels.push(label);
         actions.push(Action::Open(m.name.clone()));

@@ -56,6 +56,7 @@ fn select_fzf(
         "--height=40%",
         "--reverse",
         "--no-multi",
+        "--ansi",
     ]);
     if !expect_keys.is_empty() {
         cmd.args(["--expect", &expect_keys.join(",")]);
@@ -94,7 +95,33 @@ fn select_fzf(
     if chosen.is_empty() {
         return Ok(None);
     }
-    Ok(items.iter().position(|s| s == &chosen).map(|i| (i, key)))
+    // fzf with --ansi strips ANSI codes from its output, so an item rendered
+    // with color codes won't match the chosen line by raw equality.
+    // Compare on the ANSI-stripped form.
+    Ok(items
+        .iter()
+        .position(|s| strip_ansi(s) == chosen)
+        .map(|i| (i, key)))
+}
+
+fn strip_ansi(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    let mut chars = s.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '\x1b' && chars.peek() == Some(&'[') {
+            chars.next();
+            // Skip until the CSI final byte (0x40..=0x7e).
+            for cc in chars.by_ref() {
+                let b = cc as u32;
+                if (0x40..=0x7e).contains(&b) {
+                    break;
+                }
+            }
+            continue;
+        }
+        out.push(c);
+    }
+    out
 }
 
 fn select_inquire(title: &str, items: &[String]) -> Result<Option<(usize, Option<String>)>> {
