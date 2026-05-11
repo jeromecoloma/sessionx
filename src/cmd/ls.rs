@@ -2,12 +2,19 @@ use anyhow::Result;
 
 pub fn run(names_only: bool, all: bool) -> Result<()> {
     if all {
-        let managed = crate::tmux::list_managed_sessions()?;
+        let mut managed = crate::tmux::list_managed_sessions()?;
         if managed.is_empty() {
             if !names_only {
                 eprintln!("no managed sessionx sessions");
             }
             return Ok(());
+        }
+        // If invoked inside a project (.sessionx.yaml found walking up), sort
+        // sessions belonging to that project to the top so picker helpers like
+        // `sxa` surface related sessions first.
+        if let Ok(loaded) = crate::config::find_and_load() {
+            let project_root = loaded.project_root.display().to_string();
+            managed.sort_by_key(|m| if m.project == project_root { 0 } else { 1 });
         }
         for m in &managed {
             if names_only {
