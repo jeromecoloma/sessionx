@@ -122,6 +122,14 @@ pub fn remove(loaded: &Loaded, handle: &str, force: bool) -> Result<()> {
                 .with_context(|| format!("rm -rf {} after git refused", path.display()))?;
             let _ = git(&loaded.project_root, &["worktree", "prune"]);
         }
+        Err(e) if is_dir_not_empty(&e) => {
+            // Git's safety checks passed (no modified/untracked tracked files)
+            // but rmdir failed on gitignored leftovers — vendor/, node_modules/,
+            // logs written by pre_remove teardown hooks, etc. Safe to wipe.
+            std::fs::remove_dir_all(&path)
+                .with_context(|| format!("rm -rf {} after git refused", path.display()))?;
+            let _ = git(&loaded.project_root, &["worktree", "prune"]);
+        }
         Err(e) => return Err(e),
     }
     let branch = handle_to_branch(handle, loaded.config.worktree_naming);
@@ -135,6 +143,10 @@ pub fn remove(loaded: &Loaded, handle: &str, force: bool) -> Result<()> {
 
 fn is_not_a_worktree(err: &anyhow::Error) -> bool {
     err.to_string().contains("is not a working tree")
+}
+
+fn is_dir_not_empty(err: &anyhow::Error) -> bool {
+    err.to_string().contains("Directory not empty")
 }
 
 fn apply_files(loaded: &Loaded, dest: &Path) -> Result<()> {
