@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-05-12
+
 ### Changed
 - `sessionx ls --all` now sorts sessions belonging to the current project
   (detected via `.sessionx.yaml` in cwd or any parent) to the top, so
@@ -152,7 +154,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.11...HEAD
+[0.1.11]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.11
 [0.1.10]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.10
 [0.1.9]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.9
 [0.1.8]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.8
