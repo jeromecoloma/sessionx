@@ -10,6 +10,11 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Changed
+- `sessionx ls --all` now sorts sessions belonging to the current project
+  (detected via `.sessionx.yaml` in cwd or any parent) to the top, so
+  `sxa`'s fzf picker surfaces related sessions first.
+
 ## [0.1.10] - 2026-05-07
 
 ### Fixed
