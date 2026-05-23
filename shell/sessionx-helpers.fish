@@ -1,9 +1,10 @@
 # sessionx shell helpers for fish — source from ~/.config/fish/config.fish
-# Provides sxl (list), sxa (attach), sxk (kill), with fzf picker fallback.
+# Provides sxl (list project), sxla (list all), sxa (attach), sxk (kill),
+# with fzf picker fallback.
 
 function _sessionx_pick_session
     sessionx ls --all 2>/dev/null \
-        | fzf --height=40% --reverse --with-nth=1,3 --delimiter=\t \
+        | fzf --height=40% --reverse --cycle --with-nth=1,3 --delimiter=\t \
               --prompt="$argv[1]> " \
         | awk -F\t '{print $1}'
 end
@@ -13,6 +14,10 @@ function sx
 end
 
 function sxl
+    sessionx ls $argv
+end
+
+function sxla
     sessionx ls --all $argv
 end
 

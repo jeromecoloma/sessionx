@@ -163,7 +163,7 @@ EOF
 esac
 
 #-------------------------------------------------------------------------------
-# 3. Optional: sxl/sxa/sxk shell helpers
+# 3. Optional: sxl/sxla/sxa/sxk shell helpers
 #-------------------------------------------------------------------------------
 helpers_marker='# sessionx helpers'
 case "$SHELL_KIND" in
@@ -181,7 +181,7 @@ case "$SHELL_KIND" in
         ;;
 esac
 
-if [[ -f "$helpers_file" ]] && ask_yn "Install sxl/sxa/sxk shell helpers in $rc_file?"; then
+if [[ -f "$helpers_file" ]] && ask_yn "Install sxl/sxla/sxa/sxk shell helpers in $rc_file?"; then
     if [[ -f "$rc_file" ]] && grep -qF "$helpers_marker" "$rc_file"; then
         log "$rc_file already sources the helpers"
     else

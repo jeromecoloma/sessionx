@@ -94,7 +94,7 @@ enum Cmd {
     },
     /// Print shell completions to stdout (bash, zsh, fish)
     Completions { shell: String },
-    /// Print shell helpers (sx/sxl/sxa/sxk) for `eval`. Supports bash, zsh, fish.
+    /// Print shell helpers (sx/sxl/sxla/sxa/sxk) for `eval`. Supports bash, zsh, fish.
     ///
     /// Usage: add `eval "$(sessionx shell-init zsh)"` to your ~/.zshrc.
     #[command(name = "shell-init")]

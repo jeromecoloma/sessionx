@@ -1,13 +1,13 @@
 # sessionx shell helpers — source from your .zshrc / .bashrc
-# Provides sxl (list), sxa (attach), sxk (kill), with fzf picker fallback
-# and zsh tab-completion of managed session names.
+# Provides sxl (list project), sxla (list all), sxa (attach), sxk (kill),
+# with fzf picker fallback and zsh tab-completion of managed session names.
 
 # Make re-sourcing safe: drop any aliases that would shadow our function names.
-unalias sx sxl sxa sxk 2>/dev/null
+unalias sx sxl sxla sxa sxk 2>/dev/null
 
 _sessionx_pick_session() {
     sessionx ls --all 2>/dev/null \
-        | fzf --height=40% --reverse --with-nth=1,3 --delimiter=$'\t' \
+        | fzf --height=40% --reverse --cycle --with-nth=1,3 --delimiter=$'\t' \
               --prompt="$1> " \
         | awk -F'\t' '{print $1}'
 }
@@ -17,6 +17,10 @@ sx() {
 }
 
 sxl() {
+    sessionx ls "$@"
+}
+
+sxla() {
     sessionx ls --all "$@"
 }
 

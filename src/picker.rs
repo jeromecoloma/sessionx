@@ -57,6 +57,7 @@ fn select_fzf(
         "--reverse",
         "--no-multi",
         "--ansi",
+        "--cycle",
     ]);
     if !expect_keys.is_empty() {
         cmd.args(["--expect", &expect_keys.join(",")]);
