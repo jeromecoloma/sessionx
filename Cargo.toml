@@ -24,6 +24,7 @@ anyhow = "1"
 dirs = "6"
 shell-words = "1"
 inquire = "0.9"
+anstyle = "1"
 
 [profile.release]
 strip = true
