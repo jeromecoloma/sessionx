@@ -86,6 +86,9 @@ pub fn run() -> Result<()> {
     } else if in_git {
         labels.push("Init .sessionx.yaml here".to_string());
         actions.push(Action::Init);
+    } else {
+        labels.push("New plain tmux session".to_string());
+        actions.push(Action::PlainTmux);
     }
 
     let here = loaded
@@ -120,8 +123,10 @@ pub fn run() -> Result<()> {
         actions.push(Action::OpenPlain(name.clone()));
     }
 
-    labels.push("New plain tmux session".to_string());
-    actions.push(Action::PlainTmux);
+    if loaded.is_some() || in_git {
+        labels.push("New plain tmux session".to_string());
+        actions.push(Action::PlainTmux);
+    }
 
     labels.push("Quit".to_string());
     actions.push(Action::Quit);
