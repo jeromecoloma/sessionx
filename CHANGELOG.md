@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-05-23
+
 ### Added
 - `sxla` shell helper: `sessionx ls --all` (every managed session globally).
   `sxl` now maps to `sessionx ls` (current project only).
@@ -170,7 +172,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.11...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.12...HEAD
+[0.1.12]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.12
 [0.1.11]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.11
 [0.1.10]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.10
 [0.1.9]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.9
