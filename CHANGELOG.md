@@ -10,6 +10,22 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Added
+- `sxla` shell helper: `sessionx ls --all` (every managed session globally).
+  `sxl` now maps to `sessionx ls` (current project only).
+
+### Changed
+- `sessionx ls --all` pretty-prints to a TTY with aligned columns, a dim/bold
+  header, bold-cyan session names, yellow branches, dim paths, and `$HOME`
+  collapsed to `~`. A blank line separates the current project's sessions
+  from the rest. Piped output is unchanged (raw tab-separated) so `fzf` and
+  scripts keep working. Respects `NO_COLOR`.
+- `sessionx` interactive picker (fzf) now uses `--cycle`, so Ctrl-P/Ctrl-N
+  wrap around at the ends of the list.
+- When invoked from a directory that is neither a sessionx project nor a git
+  repo, the picker now lists **New plain tmux session** as the first entry
+  (instead of burying it at the bottom).
+
 ## [0.1.11] - 2026-05-12
 
 ### Changed
