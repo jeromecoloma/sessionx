@@ -10,6 +10,21 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Added
+- Plain tmux sessions are now tracked: they're tagged as sessionx-managed so
+  they appear in `sxla` (`sessionx ls --all`) with their directory as the
+  branch/path, even though they have no `.sessionx.yaml`.
+
+### Changed
+- Creating a **New plain tmux session** now always offers a rename prompt
+  before the session is created (esc keeps the generated name), matching the
+  rename flow used when a session name is too long.
+
+### Fixed
+- `sxk` on a plain tmux session no longer prints the spurious
+  "project config not found … worktree cleanup skipped" warning — plain
+  sessions have no worktree to clean up.
+
 ## [0.1.12] - 2026-05-23
 
 ### Added
