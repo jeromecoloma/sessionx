@@ -26,10 +26,14 @@ pub fn run(arg: &str, force: bool) -> Result<()> {
                     tmux::kill_session(&m.name)?;
                     println!("killed session {}", m.name);
                 }
-                eprintln!(
-                    "sessionx: project config not found at {} — worktree cleanup skipped",
-                    m.project
-                );
+                // Plain tmux sessions have no `.sessionx.yaml` and no worktree —
+                // the missing-config warning is expected noise, so skip it.
+                if !m.plain {
+                    eprintln!(
+                        "sessionx: project config not found at {} — worktree cleanup skipped",
+                        m.project
+                    );
+                }
                 return Ok(());
             }
         }

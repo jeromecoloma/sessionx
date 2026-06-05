@@ -216,6 +216,8 @@ pub struct ManagedSession {
     pub name: String,
     pub project: String,
     pub handle: String,
+    /// Plain tmux session (no `.sessionx.yaml`); has no worktree to clean up.
+    pub plain: bool,
 }
 
 pub fn list_unmanaged_sessions() -> Result<Vec<String>> {
@@ -243,7 +245,7 @@ pub fn list_managed_sessions() -> Result<Vec<ManagedSession>> {
     if !run_quiet(&["info"]) {
         return Ok(vec![]);
     }
-    let fmt = "#{session_name}\t#{@sessionx-managed}\t#{@sessionx-project}\t#{@sessionx-handle}";
+    let fmt = "#{session_name}\t#{@sessionx-managed}\t#{@sessionx-project}\t#{@sessionx-handle}\t#{@sessionx-plain}";
     let out = run(&["list-sessions", "-F", fmt])?;
     let mut v = vec![];
     for line in out.lines() {
@@ -252,11 +254,13 @@ pub fn list_managed_sessions() -> Result<Vec<ManagedSession>> {
         let managed = it.next().unwrap_or("");
         let project = it.next().unwrap_or("").to_string();
         let handle = it.next().unwrap_or("").to_string();
+        let plain = it.next().unwrap_or("") == "1";
         if managed == "1" && !name.is_empty() {
             v.push(ManagedSession {
                 name,
                 project,
                 handle,
+                plain,
             });
         }
     }

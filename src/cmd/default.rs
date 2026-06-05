@@ -304,6 +304,13 @@ fn plain_tmux(cwd: &Path) -> Result<()> {
 
     tmux::new_session(&name, cwd, None)?;
 
+    // Tag so `sxla` (ls --all) and cross-project open can see plain sessions
+    // even though they have no `.sessionx.yaml`.
+    tmux::set_user_option(&name, "sessionx-managed", "1")?;
+    tmux::set_user_option(&name, "sessionx-project", &cwd.display().to_string())?;
+    tmux::set_user_option(&name, "sessionx-handle", base)?;
+    tmux::set_user_option(&name, "sessionx-plain", "1")?;
+
     if let Some(theme_name) = theme {
         let spec = StatusSpec {
             enabled: true,
