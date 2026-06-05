@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-06-05
+
 ### Added
 - Plain tmux sessions are now tracked: they're tagged as sessionx-managed so
   they appear in `sxla` (`sessionx ls --all`) with their directory as the
@@ -187,7 +189,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.12...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.1.13...HEAD
+[0.1.13]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.13
 [0.1.12]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.12
 [0.1.11]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.11
 [0.1.10]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.10
