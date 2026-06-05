@@ -300,7 +300,7 @@ fn plain_tmux(cwd: &Path) -> Result<()> {
         name = sanitize(&format!("tmux-{base}-{}-{suffix}", stamp % 100000));
     }
 
-    name = picker::maybe_rename_long(name, 20, sanitize, tmux::has_session)?;
+    name = picker::offer_rename(name, sanitize, tmux::has_session)?;
 
     tmux::new_session(&name, cwd, None)?;
 

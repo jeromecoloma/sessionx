@@ -193,6 +193,16 @@ pub fn maybe_rename_long(
     }
 }
 
+/// Always offer a rename, defaulting to `name`. Same prompt/validation as
+/// [`maybe_rename_long`] but without the length threshold — esc keeps `name`.
+pub fn offer_rename(
+    name: String,
+    sanitize: impl Fn(&str) -> String,
+    is_taken: impl Fn(&str) -> bool,
+) -> Result<String> {
+    maybe_rename_long(name, 0, sanitize, is_taken)
+}
+
 /// Prompt the user for free-text input.
 /// Returns `Ok(None)` if cancelled (esc/ctrl+c), no TTY, or input is blank.
 pub fn prompt(title: &str) -> Result<Option<String>> {
