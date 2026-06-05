@@ -1,3 +1,6 @@
+# sessionx config
+.sessionx.yaml
+
 # Rust build artifacts
 /target/
 **/*.rs.bk
