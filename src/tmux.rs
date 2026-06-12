@@ -99,6 +99,33 @@ pub fn new_window(session: &str, name: Option<&str>, cwd: &Path) -> Result<(Stri
     parse_two(&out)
 }
 
+/// Like [`new_window`] but detached (`-d`): the new window is created without
+/// switching the active window. Returns `(window_id, pane_id)`.
+pub fn new_window_detached(
+    session: &str,
+    name: Option<&str>,
+    cwd: &Path,
+) -> Result<(String, String)> {
+    let cwd_s = cwd.to_string_lossy().to_string();
+    let mut args = vec![
+        "new-window",
+        "-d",
+        "-t",
+        session,
+        "-c",
+        cwd_s.as_str(),
+        "-P",
+        "-F",
+        "#{window_id} #{pane_id}",
+    ];
+    if let Some(n) = name {
+        args.push("-n");
+        args.push(n);
+    }
+    let out = run(&args)?;
+    parse_two(&out)
+}
+
 fn parse_two(out: &str) -> Result<(String, String)> {
     let line = out
         .lines()
@@ -209,6 +236,125 @@ pub fn set_user_option(session: &str, key: &str, value: &str) -> Result<()> {
     let opt = format!("@{key}");
     run(&["set-option", "-t", session, &opt, value])?;
     Ok(())
+}
+
+/// Set a pane-scoped user option (auto-prefixed with `@`). Requires tmux >= 3.0.
+pub fn set_pane_option(pane: &str, key: &str, value: &str) -> Result<()> {
+    let opt = format!("@{key}");
+    run(&["set-option", "-p", "-t", pane, &opt, value])?;
+    Ok(())
+}
+
+/// Read a pane-scoped user option (auto-prefixed with `@`); empty when unset.
+pub fn get_pane_option(pane: &str, key: &str) -> String {
+    let opt = format!("@{key}");
+    run(&["show-options", "-pqv", "-t", pane, &opt])
+        .map(|s| s.trim().to_string())
+        .unwrap_or_default()
+}
+
+/// `(session_name, window_name)` of the window that owns `pane`.
+pub fn pane_location(pane: &str) -> Result<(String, String)> {
+    let out = run(&[
+        "display-message",
+        "-p",
+        "-t",
+        pane,
+        "#{session_name}\t#{window_name}",
+    ])?;
+    let line = out.lines().next().unwrap_or("");
+    let mut it = line.split('\t');
+    let session = it.next().unwrap_or("").to_string();
+    let window = it.next().unwrap_or("").to_string();
+    Ok((session, window))
+}
+
+/// ttys of attached clients — clients of `session`, or every client when
+/// `None`. Best-effort: returns empty on any tmux error.
+pub fn client_ttys(session: Option<&str>) -> Vec<String> {
+    let target;
+    let mut args = vec!["list-clients", "-F", "#{client_tty}"];
+    if let Some(s) = session {
+        target = format!("={s}");
+        args.push("-t");
+        args.push(&target);
+    }
+    match run(&args) {
+        Ok(out) => out
+            .lines()
+            .filter(|l| !l.is_empty())
+            .map(String::from)
+            .collect(),
+        Err(_) => vec![],
+    }
+}
+
+/// Swap two panes, keeping the current active pane unchanged (`-d`). Processes
+/// stay alive; the panes exchange positions across (possibly different) windows.
+pub fn swap_pane(src: &str, dst: &str) -> Result<()> {
+    run(&["swap-pane", "-d", "-s", src, "-t", dst])?;
+    Ok(())
+}
+
+pub fn kill_pane(pane: &str) -> Result<()> {
+    run(&["kill-pane", "-t", pane])?;
+    Ok(())
+}
+
+/// Capture the last `lines` rows of `pane` as plain text.
+pub fn capture_pane_tail(pane: &str, lines: u32) -> Result<String> {
+    let start = format!("-{lines}");
+    let out = run(&["capture-pane", "-p", "-t", pane, "-S", &start])?;
+    Ok(out)
+}
+
+/// One pane in a sessionx-agentmode session, with the agent-tracking options.
+#[derive(Debug, Clone)]
+pub struct PaneInfo {
+    pub id: String,
+    pub window_name: String,
+    pub is_sidebar: bool,
+    pub is_agent: bool,
+    pub handle: String,
+    pub state_raw: String,
+    pub seen: bool,
+    pub current_cmd: String,
+}
+
+/// List every pane in `session` across all its windows, with sessionx agent
+/// options resolved. Used by the agent-mode dashboard.
+pub fn list_session_panes(session: &str) -> Result<Vec<PaneInfo>> {
+    if !run_quiet(&["has-session", "-t", &format!("={session}")]) {
+        return Ok(vec![]);
+    }
+    let fmt = "#{pane_id}\t#{window_name}\t#{@sx-sidebar}\t#{@sx-agent}\t#{@sx-agent-handle}\t#{@sx-agent-state}\t#{@sx-agent-seen}\t#{pane_current_command}";
+    let out = run(&["list-panes", "-s", "-t", session, "-F", fmt])?;
+    let mut v = vec![];
+    for line in out.lines() {
+        let mut it = line.split('\t');
+        let id = it.next().unwrap_or("").to_string();
+        if id.is_empty() {
+            continue;
+        }
+        let window_name = it.next().unwrap_or("").to_string();
+        let is_sidebar = it.next().unwrap_or("") == "1";
+        let is_agent = it.next().unwrap_or("") == "1";
+        let handle = it.next().unwrap_or("").to_string();
+        let state_raw = it.next().unwrap_or("").to_string();
+        let seen = it.next().unwrap_or("") == "1";
+        let current_cmd = it.next().unwrap_or("").to_string();
+        v.push(PaneInfo {
+            id,
+            window_name,
+            is_sidebar,
+            is_agent,
+            handle,
+            state_raw,
+            seen,
+            current_cmd,
+        });
+    }
+    Ok(v)
 }
 
 #[derive(Debug)]

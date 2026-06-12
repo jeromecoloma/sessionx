@@ -58,9 +58,18 @@ pub fn run_get(key: Option<&str>) -> Result<()> {
         Some("agent") => {
             println!("{}", agent::resolve());
         }
+        Some("notify") => {
+            println!("{}", agent::global_notify_enabled());
+        }
+        Some("bell") => {
+            println!("{}", agent::global_bell_enabled());
+        }
+        Some("title") => {
+            println!("{}", agent::global_title_enabled());
+        }
         Some(other) => {
             return Err(anyhow!(
-                "unknown key '{other}' (try 'agent' or no arg to dump the file)"
+                "unknown key '{other}' (try 'agent', 'notify', 'bell', 'title', or no arg to dump the file)"
             ));
         }
     }
@@ -76,6 +85,19 @@ pub fn run_set(key: &str, value: &str) -> Result<()> {
             println!("set agent={value} in {}", path.display());
             Ok(())
         }
-        other => Err(anyhow!("unknown key '{other}' (currently only 'agent')")),
+        "notify" | "bell" | "title" => {
+            let v = match value.trim().to_ascii_lowercase().as_str() {
+                "true" | "on" | "1" | "yes" => "true",
+                "false" | "off" | "0" | "no" => "false",
+                other => return Err(anyhow!("{key} takes true|false, got '{other}'")),
+            };
+            agent::save_global_key(key, v)?;
+            let path = agent::config_path().ok_or_else(|| anyhow!("no config dir"))?;
+            println!("set {key}={v} in {}", path.display());
+            Ok(())
+        }
+        other => Err(anyhow!(
+            "unknown key '{other}' (try 'agent', 'notify', 'bell', or 'title')"
+        )),
     }
 }

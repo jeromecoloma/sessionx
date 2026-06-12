@@ -1,8 +1,10 @@
 mod agent;
+mod agent_state;
 mod cmd;
 mod config;
 mod hooks;
 mod hooks_repo;
+mod notify;
 mod picker;
 mod status;
 mod themes;
@@ -92,6 +94,31 @@ enum Cmd {
         #[arg(long)]
         force: bool,
     },
+    /// Enter a sessionx mode. Currently: `agent` (agent-mode dashboard).
+    ///
+    /// Builds/attaches the `sessionx-agentmode` session: a sidebar navigator on
+    /// the left, the focused agent's terminal on the right. Agents are created
+    /// from within the dashboard and tracked live (running / blocked / done).
+    Mode {
+        /// The mode to enter. Currently only `agent`.
+        what: String,
+    },
+    /// The agent-mode sidebar navigator (internal; launched by `mode agent`).
+    #[command(hide = true)]
+    Dash,
+    /// Report an agent's state to the dashboard (for agent hooks).
+    ///
+    /// Run from inside an agent's pane (uses `$TMUX_PANE`). Wire it into Claude
+    /// Code hooks: e.g. `sessionx agent-state working` on turn start,
+    /// `blocked` when awaiting approval, `done` on stop.
+    #[command(name = "agent-state")]
+    AgentState {
+        /// One of: blocked | working | done | idle.
+        state: String,
+        /// Target pane id instead of `$TMUX_PANE`.
+        #[arg(long)]
+        pane: Option<String>,
+    },
     /// Print shell completions to stdout (bash, zsh, fish)
     Completions { shell: String },
     /// Print shell helpers (sx/sxl/sxla/sxa/sxk) for `eval`. Supports bash, zsh, fish.
@@ -171,6 +198,9 @@ fn main() -> Result<()> {
         Some(Cmd::Ls { names_only, all }) => cmd::ls::run(names_only, all),
         Some(Cmd::Open { name, names_only }) => cmd::open::run(name.as_deref(), names_only),
         Some(Cmd::Rm { name, force }) => cmd::rm::run(&name, force),
+        Some(Cmd::Mode { what }) => cmd::mode::run(&what),
+        Some(Cmd::Dash) => cmd::dash::run(),
+        Some(Cmd::AgentState { state, pane }) => cmd::agent_state::run(&state, pane.as_deref()),
         Some(Cmd::Completions { shell }) => print_completions(&shell),
         Some(Cmd::ShellInit { shell }) => print_shell_init(&shell),
         Some(Cmd::Themes) => {

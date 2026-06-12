@@ -1,10 +1,13 @@
 pub mod add;
+pub mod agent_state;
 pub mod config;
+pub mod dash;
 pub mod default;
 pub mod edit;
 pub mod hooks;
 pub mod init;
 pub mod ls;
+pub mod mode;
 pub mod open;
 pub mod rm;
 pub mod theme;

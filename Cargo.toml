@@ -25,6 +25,7 @@ dirs = "6"
 shell-words = "1"
 inquire = "0.9"
 anstyle = "1"
+ratatui = "0.29"
 
 [profile.release]
 strip = true

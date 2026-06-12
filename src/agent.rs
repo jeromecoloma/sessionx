@@ -26,6 +26,12 @@ struct GlobalConfig {
     agent: Option<String>,
     #[serde(default)]
     git_main_branches: Option<Vec<String>>,
+    #[serde(default)]
+    notify: Option<bool>,
+    #[serde(default)]
+    bell: Option<bool>,
+    #[serde(default)]
+    title: Option<bool>,
 }
 
 /// Path to the global config. Always uses XDG semantics
@@ -100,6 +106,24 @@ pub fn global_git_main_branches() -> Vec<String> {
         .unwrap_or_else(|| vec!["main".to_string(), "master".to_string()])
 }
 
+/// True unless the global config sets `notify: false`. Gates the OSC 777
+/// desktop notifications emitted on agent blocked/done transitions.
+pub fn global_notify_enabled() -> bool {
+    load_global().notify.unwrap_or(true)
+}
+
+/// True unless the global config sets `bell: false`. When on, notifications
+/// also ring the terminal bell — the fallback for terminals without OSC 9.
+pub fn global_bell_enabled() -> bool {
+    load_global().bell.unwrap_or(true)
+}
+
+/// True unless the global config sets `title: false`. When on, agent state
+/// changes rewrite the outer terminal's title with a status glyph.
+pub fn global_title_enabled() -> bool {
+    load_global().title.unwrap_or(true)
+}
+
 /// True when `~/.config/sessionx/config.yaml` exists and already has a non-empty `agent:` field.
 pub fn global_agent_set() -> bool {
     load_global()
@@ -111,6 +135,12 @@ pub fn global_agent_set() -> bool {
 /// Persist `agent: <value>` to the global config, creating the file if needed.
 /// Preserves any other top-level keys already present.
 pub fn save_global_agent(value: &str) -> anyhow::Result<()> {
+    save_global_key("agent", value)
+}
+
+/// Persist a top-level `<key>: <value>` to the global config, creating the
+/// file if needed. Preserves any other top-level keys already present.
+pub fn save_global_key(key: &str, value: &str) -> anyhow::Result<()> {
     use anyhow::Context;
     let path = config_path().ok_or_else(|| anyhow::anyhow!("no config dir"))?;
     if let Some(parent) = path.parent() {
@@ -118,14 +148,15 @@ pub fn save_global_agent(value: &str) -> anyhow::Result<()> {
             .with_context(|| format!("creating {}", parent.display()))?;
     }
     let existing = std::fs::read_to_string(&path).unwrap_or_default();
-    let updated = rewrite_agent(&existing, value);
+    let updated = rewrite_key(&existing, key, value);
     std::fs::write(&path, updated).with_context(|| format!("writing {}", path.display()))?;
     Ok(())
 }
 
-/// Inline rewrite: replace the first top-level `agent:` line, or append one
+/// Inline rewrite: replace the first top-level `<key>:` line, or append one
 /// if missing. Keeps comments and other keys intact.
-fn rewrite_agent(input: &str, value: &str) -> String {
+fn rewrite_key(input: &str, key: &str, value: &str) -> String {
+    let prefix = format!("{key}:");
     let mut out = String::with_capacity(input.len() + 32);
     let mut wrote = false;
     let trailing_nl = input.ends_with('\n') || input.is_empty();
@@ -133,11 +164,11 @@ fn rewrite_agent(input: &str, value: &str) -> String {
     for (i, line) in input.lines().enumerate() {
         let last = i + 1 == line_count;
         if !wrote
-            && line.trim_start().starts_with("agent:")
+            && line.trim_start().starts_with(&prefix)
             && !line.starts_with(' ')
             && !line.starts_with('\t')
         {
-            out.push_str(&format!("agent: {value}"));
+            out.push_str(&format!("{key}: {value}"));
             wrote = true;
         } else {
             out.push_str(line);
@@ -150,7 +181,7 @@ fn rewrite_agent(input: &str, value: &str) -> String {
         if !out.is_empty() && !out.ends_with('\n') {
             out.push('\n');
         }
-        out.push_str(&format!("agent: {value}\n"));
+        out.push_str(&format!("{key}: {value}\n"));
     }
     out
 }
@@ -188,23 +219,30 @@ mod tests {
     use super::*;
 
     #[test]
-    fn rewrite_agent_replaces_existing() {
+    fn rewrite_key_replaces_existing() {
         let input = "# header\nagent: claude\nfoo: bar\n";
-        let out = rewrite_agent(input, "codex");
+        let out = rewrite_key(input, "agent", "codex");
         assert_eq!(out, "# header\nagent: codex\nfoo: bar\n");
     }
 
     #[test]
-    fn rewrite_agent_appends_when_missing() {
+    fn rewrite_key_appends_when_missing() {
         let input = "# header\nfoo: bar\n";
-        let out = rewrite_agent(input, "aider");
+        let out = rewrite_key(input, "agent", "aider");
         assert_eq!(out, "# header\nfoo: bar\nagent: aider\n");
     }
 
     #[test]
-    fn rewrite_agent_creates_when_empty() {
-        let out = rewrite_agent("", "claude");
+    fn rewrite_key_creates_when_empty() {
+        let out = rewrite_key("", "agent", "claude");
         assert_eq!(out, "agent: claude\n");
+    }
+
+    #[test]
+    fn rewrite_key_handles_notify() {
+        let input = "agent: claude\nnotify: true\n";
+        let out = rewrite_key(input, "notify", "false");
+        assert_eq!(out, "agent: claude\nnotify: false\n");
     }
 
     #[test]

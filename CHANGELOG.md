@@ -10,6 +10,28 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Added
+- **Agent mode** (`sessionx mode agent`): a `sessionx-agentmode` session with a
+  sidebar navigator (ratatui TUI) and a stage pane. Create, focus, and kill
+  agents from the sidebar; each agent lives in its own hidden window and is
+  swapped onto the stage when focused. Live status glyphs: 🔴 blocked,
+  🟡 working, 🔵 done, 🟢 idle.
+- `sessionx agent-state <blocked|working|done|idle>` — lets agent integrations
+  (e.g. Claude Code hooks) report their status via pane-scoped tmux options.
+  Agents without hooks fall back to heuristics (shell-exit detection,
+  prompt-scrape of the pane tail).
+- **Desktop notifications**: transitions into blocked/done emit an OSC 9
+  notification + BEL written directly to every attached tmux client tty
+  (bypasses passthrough). Banners on Ghostty/kitty/iTerm2/WezTerm/foot;
+  bell-only fallback elsewhere.
+- **Tab-title status glyphs**: every agent state transition rewrites the outer
+  terminal's title (OSC 2) with the state glyph, so tab bars show at a glance
+  which agent needs attention. Plain sessions (no handle) are labeled
+  `session:window`.
+- Global config keys `notify`, `bell`, `title` — toggle via
+  `sessionx config set <key> true|false` (all default on); `SX_NOTIFY=0`
+  disables notifications per-shell.
+
 ## [0.1.13] - 2026-06-05
 
 ### Added
