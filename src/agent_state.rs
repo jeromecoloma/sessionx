@@ -151,6 +151,9 @@ mod tests {
             resolve("", false, "node", "Do you want to proceed? (y/n)"),
             AgentState::Blocked
         );
-        assert_eq!(resolve("", false, "node", "compiling..."), AgentState::Working);
+        assert_eq!(
+            resolve("", false, "node", "compiling..."),
+            AgentState::Working
+        );
     }
 }

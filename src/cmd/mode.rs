@@ -38,9 +38,8 @@ fn run_agent() -> Result<()> {
         return Ok(());
     }
 
-    let cwd = std::env::current_dir().unwrap_or_else(|_| {
-        dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."))
-    });
+    let cwd = std::env::current_dir()
+        .unwrap_or_else(|_| dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from(".")));
 
     // control window, first pane → sidebar (runs this dashboard's navigator).
     let (_wid, sidebar) = tmux::new_session(SESSION, &cwd, Some(CONTROL_WINDOW))?;

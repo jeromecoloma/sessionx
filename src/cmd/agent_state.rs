@@ -21,9 +21,8 @@ pub fn run(state: &str, pane: Option<&str>) -> Result<()> {
 
     let pane = match pane {
         Some(p) => p.to_string(),
-        None => std::env::var("TMUX_PANE").map_err(|_| {
-            anyhow!("not inside a tmux pane ($TMUX_PANE unset); pass --pane <id>")
-        })?,
+        None => std::env::var("TMUX_PANE")
+            .map_err(|_| anyhow!("not inside a tmux pane ($TMUX_PANE unset); pass --pane <id>"))?,
     };
 
     let prev = AgentState::parse(&tmux::get_pane_option(&pane, "sx-agent-state"));

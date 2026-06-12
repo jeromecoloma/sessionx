@@ -245,9 +245,11 @@ impl App {
             Mode::NewAgent(buf) => Paragraph::new(format!("new agent: {buf}_"))
                 .style(Style::default().fg(Color::Yellow))
                 .block(Block::default().borders(Borders::TOP)),
-            Mode::Browse => Paragraph::new("j/k move · enter focus · space stage · n new · x kill · q quit")
-                .style(Style::default().fg(Color::DarkGray))
-                .block(Block::default().borders(Borders::TOP)),
+            Mode::Browse => {
+                Paragraph::new("j/k move · enter focus · space stage · n new · x kill · q quit")
+                    .style(Style::default().fg(Color::DarkGray))
+                    .block(Block::default().borders(Borders::TOP))
+            }
         };
         f.render_widget(footer, chunks[2]);
     }
