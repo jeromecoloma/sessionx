@@ -3,13 +3,13 @@
 //! Each agent runs in its own pane inside the `sessionx-agentmode` session and
 //! carries pane-scoped options describing its status:
 //!
-//!   - `@sx-agent`        — "1" marks the pane as an agent (vs. sidebar / parking).
-//!   - `@sx-agent-handle` — the display name shown in the sidebar.
-//!   - `@sx-agent-state`  — last-reported state (see [`AgentState`]). Written by
-//!                          native integrations (Claude Code hooks → `sessionx
-//!                          agent-state <state>`); empty for agents with no hook.
-//!   - `@sx-agent-seen`   — "1" once the user has focused the agent since it last
-//!                          finished, flipping `Done` → `Idle`.
+//! - `@sx-agent` — "1" marks the pane as an agent (vs. sidebar / parking).
+//! - `@sx-agent-handle` — the display name shown in the sidebar.
+//! - `@sx-agent-state` — last-reported state (see [`AgentState`]). Written by
+//!   native integrations (Claude Code hooks → `sessionx agent-state <state>`);
+//!   empty for agents with no hook.
+//! - `@sx-agent-seen` — "1" once the user has focused the agent since it last
+//!   finished, flipping `Done` → `Idle`.
 //!
 //! State is resolved in two tiers, mirroring herdr:
 //!
