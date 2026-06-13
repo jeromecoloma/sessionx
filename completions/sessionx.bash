@@ -4,7 +4,7 @@ _sessionx() {
     local cur prev words cword
     _init_completion || return
 
-    local commands="init edit add ls open rm completions themes theme hooks config -h --help -V --version -v --verbose"
+    local commands="init edit add ls open rm completions themes theme hooks config mode agent-hooks -h --help -V --version -v --verbose"
     local cmd=""
     local i
     for ((i=1; i < cword; i++)); do
@@ -44,6 +44,12 @@ _sessionx() {
             ;;
         completions)
             COMPREPLY=( $(compgen -W "bash zsh fish" -- "$cur") )
+            ;;
+        mode)
+            COMPREPLY=( $(compgen -W "agent" -- "$cur") )
+            ;;
+        agent-hooks)
+            COMPREPLY=( $(compgen -W "install uninstall status" -- "$cur") )
             ;;
         hooks)
             local sub=""

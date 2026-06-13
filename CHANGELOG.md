@@ -10,6 +10,33 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Changed
+- **Agent mode rebuilt as an attention inbox** (`sessionx mode agent`).
+  Agents now live in ordinary panes in ordinary sessions — the dedicated
+  `sessionx-agentmode` session, hidden agent windows, and the sidebar/stage
+  `swap-pane` machinery are gone. The dashboard is a full-screen TUI over
+  every agent pane on the tmux server, sorted by urgency (needs you /
+  running / done / idle) with a live tail preview of the selected agent.
+  `Enter` jumps to the agent's real pane (`switch-client` inside tmux,
+  attach from outside) and marks it reviewed.
+
+### Added
+- `sessionx agent-hooks <install|uninstall|status>` — wires Claude Code hooks
+  into `~/.claude/settings.json` so agents report state natively:
+  `UserPromptSubmit` → working, `Notification` → blocked, `Stop` → done.
+  Idempotent; preserves unrelated hooks; `uninstall` removes exactly what
+  was added.
+- Hook-less agents (codex, aider, gemini, …) are auto-detected by foreground
+  process name and tracked via the existing heuristics.
+- Shell completions for `mode` and `agent-hooks` (bash/zsh/fish).
+
+### Breaking
+- `sessionx mode agent` no longer creates the `sessionx-agentmode` session,
+  and the dashboard no longer spawns agents (`n`) — create sessions the
+  normal way (`sessionx add`, `.sessionx.yaml` agent windows). A leftover
+  `sessionx-agentmode` session from v0.2.0 is just a plain session now; kill
+  it with `tmux kill-session -t sessionx-agentmode`.
+
 ## [0.2.0] - 2026-06-12
 
 ### Added

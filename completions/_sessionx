@@ -15,6 +15,8 @@ _sessionx() {
         'theme:manage project theme (set/preview/list)'
         'hooks:manage stack-specific hook recipes (list/info/install/update/repo)'
         'config:manage global config (~/.config/sessionx/config.yaml)'
+        'mode:enter a sessionx mode (agent = dashboard)'
+        'agent-hooks:manage Claude Code agent-state hooks (install/uninstall/status)'
     )
 
     local context curcontext="$curcontext" state line ret=1
@@ -110,6 +112,12 @@ _sessionx() {
                             esac
                             ;;
                     esac
+                    ;;
+                mode)
+                    _values 'mode' agent && ret=0
+                    ;;
+                agent-hooks)
+                    _values 'action' install uninstall status && ret=0
                     ;;
                 config)
                     _arguments -C \

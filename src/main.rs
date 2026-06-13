@@ -96,21 +96,21 @@ enum Cmd {
     },
     /// Enter a sessionx mode. Currently: `agent` (agent-mode dashboard).
     ///
-    /// Builds/attaches the `sessionx-agentmode` session: a sidebar navigator on
-    /// the left, the focused agent's terminal on the right. Agents are created
-    /// from within the dashboard and tracked live (running / blocked / done).
+    /// Opens an attention inbox over every agent pane on the tmux server,
+    /// sorted by urgency (needs you / running / done / idle) with a live
+    /// preview. Enter jumps to the agent's pane.
     Mode {
         /// The mode to enter. Currently only `agent`.
         what: String,
     },
-    /// The agent-mode sidebar navigator (internal; launched by `mode agent`).
+    /// The agent-mode dashboard (alias of `mode agent`).
     #[command(hide = true)]
     Dash,
     /// Report an agent's state to the dashboard (for agent hooks).
     ///
-    /// Run from inside an agent's pane (uses `$TMUX_PANE`). Wire it into Claude
-    /// Code hooks: e.g. `sessionx agent-state working` on turn start,
-    /// `blocked` when awaiting approval, `done` on stop.
+    /// Run from inside an agent's pane (uses `$TMUX_PANE`). Wired into Claude
+    /// Code automatically by `sessionx agent-hooks install`: `working` on turn
+    /// start, `blocked` when awaiting approval, `done` on stop.
     #[command(name = "agent-state")]
     AgentState {
         /// One of: blocked | working | done | idle.
@@ -118,6 +118,16 @@ enum Cmd {
         /// Target pane id instead of `$TMUX_PANE`.
         #[arg(long)]
         pane: Option<String>,
+    },
+    /// Manage the Claude Code hooks that report agent state.
+    ///
+    /// `install` wires UserPromptSubmit/Notification/Stop hooks into
+    /// `~/.claude/settings.json` (idempotent; other hooks are preserved).
+    /// `uninstall` removes exactly those entries. `status` shows what's wired.
+    #[command(name = "agent-hooks")]
+    AgentHooks {
+        /// `install`, `uninstall`, or `status` (default).
+        arg: Option<String>,
     },
     /// Print shell completions to stdout (bash, zsh, fish)
     Completions { shell: String },
@@ -201,6 +211,14 @@ fn main() -> Result<()> {
         Some(Cmd::Mode { what }) => cmd::mode::run(&what),
         Some(Cmd::Dash) => cmd::dash::run(),
         Some(Cmd::AgentState { state, pane }) => cmd::agent_state::run(&state, pane.as_deref()),
+        Some(Cmd::AgentHooks { arg }) => match arg.as_deref() {
+            None | Some("status") => cmd::agent_hooks::run_status(),
+            Some("install") => cmd::agent_hooks::run_install(),
+            Some("uninstall") => cmd::agent_hooks::run_uninstall(),
+            Some(other) => Err(anyhow!(
+                "unknown agent-hooks subcommand '{other}' (try install|uninstall|status)"
+            )),
+        },
         Some(Cmd::Completions { shell }) => print_completions(&shell),
         Some(Cmd::ShellInit { shell }) => print_shell_init(&shell),
         Some(Cmd::Themes) => {

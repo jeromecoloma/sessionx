@@ -1,4 +1,5 @@
 pub mod add;
+pub mod agent_hooks;
 pub mod agent_state;
 pub mod config;
 pub mod dash;

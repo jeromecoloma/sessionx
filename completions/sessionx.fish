@@ -51,8 +51,13 @@ complete -c sessionx -n __sessionx_no_subcmd -a themes      -d 'list built-in th
 complete -c sessionx -n __sessionx_no_subcmd -a theme       -d 'manage project theme (set/preview/list)'
 complete -c sessionx -n __sessionx_no_subcmd -a hooks       -d 'manage hook recipes (list/info/install/update/repo)'
 complete -c sessionx -n __sessionx_no_subcmd -a config      -d 'manage global config (~/.config/sessionx/config.yaml)'
+complete -c sessionx -n __sessionx_no_subcmd -a mode        -d 'enter a sessionx mode (agent = dashboard)'
+complete -c sessionx -n __sessionx_no_subcmd -a agent-hooks -d 'manage Claude Code agent-state hooks'
 
 complete -c sessionx -s v -l verbose -d 'print tmux/git commands'
+
+complete -c sessionx -n '__sessionx_using_cmd mode' -a 'agent' -d 'agent-mode dashboard'
+complete -c sessionx -n '__sessionx_using_cmd agent-hooks' -a 'install uninstall status'
 
 complete -c sessionx -n '__sessionx_using_cmd rm' -a '(__sessionx_handles)' -d session
 complete -c sessionx -n '__sessionx_using_cmd rm' -l force -d 'force removal'

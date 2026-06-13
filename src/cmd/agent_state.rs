@@ -36,13 +36,7 @@ pub fn run(state: &str, pane: Option<&str>) -> Result<()> {
     // blocked/done additionally raise a desktop notification + bell.
     if parsed != prev {
         let (session, window) = tmux::pane_location(&pane).unwrap_or_default();
-        // Agent-mode panes carry a handle; plain sessions fall back to a
-        // human-readable location instead of the raw pane id.
-        let handle = match tmux::get_pane_option(&pane, "sx-agent-handle") {
-            h if h.is_empty() => format!("{session}:{window}"),
-            h => h,
-        };
-        notify::agent_event(&session, &handle, parsed);
+        notify::agent_event(&session, &format!("{session}:{window}"), parsed);
     }
     Ok(())
 }

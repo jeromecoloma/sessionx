@@ -158,6 +158,39 @@ Pane commands may use `<agent>` as a placeholder for your AI CLI of choice. It's
 
 The default `.sessionx.yaml` template ships an `agent` window with `command: <agent>` so once you set the global `agent:` value, every fresh session drops you straight into your AI CLI.
 
+## Agent mode
+
+`sessionx mode agent` opens an **attention inbox** over every agent running anywhere on your tmux server. Agents are ordinary panes in ordinary sessions — sessionx just watches them. The list is sorted by urgency:
+
+```
+needs you   🔴 blocked — waiting on approval/input
+running     🟡 working
+done        🔵 finished, not yet reviewed
+idle        🟢 finished and reviewed
+```
+
+The right panel live-tails the selected agent's pane. Keys: `j`/`k` move, `Enter` jumps to the agent's pane (`switch-client` inside tmux; attach when outside — detach with `prefix d` to return to the dashboard), `x` kills the pane (with confirm), `q` quits. Jumping marks the agent as reviewed, flipping done → idle.
+
+### State reporting
+
+For exact state tracking, wire Claude Code hooks once:
+
+```sh
+sessionx agent-hooks install
+```
+
+This adds three hooks to `~/.claude/settings.json` (idempotent; your other hooks are untouched — `uninstall` removes exactly these):
+
+| Claude Code event | Reports |
+|---|---|
+| `UserPromptSubmit` | `working` |
+| `Notification` | `blocked` |
+| `Stop` | `done` |
+
+Each hook calls `sessionx agent-state <state>`, which stores the state in a pane-scoped tmux option (`@sx-agent-state`) — no daemon, no sockets; the state lives in tmux itself. The same transitions drive the desktop notifications (OSC 9) and tab-title glyphs (OSC 2), so you get pinged when any agent blocks or finishes even with the dashboard closed.
+
+Agents without hooks (codex, aider, …) are still detected by their foreground process name and tracked heuristically: back-at-shell means done; an approval prompt in the pane tail means blocked.
+
 ## Commands
 
 | Command | What it does |
@@ -174,6 +207,9 @@ The default `.sessionx.yaml` template ships an `agent` window with `command: <ag
 | `sessionx theme` | Show current theme + available themes (current marked `*`). |
 | `sessionx theme set <name> [--no-apply] [--session <s>]` | Rewrite `status.theme:` in `.sessionx.yaml` and live-apply to current tmux session. |
 | `sessionx theme preview <name> [--session <s>]` | Apply a theme to a running session without editing the YAML. |
+| `sessionx mode agent` | Open the agent-mode dashboard (attention inbox over all agent panes). |
+| `sessionx agent-hooks [install\|uninstall\|status]` | Wire/unwire the Claude Code hooks that report agent state. |
+| `sessionx agent-state <blocked\|working\|done\|idle> [--pane <id>]` | Report agent state for the current pane (called by hooks; scriptable for other agents). |
 | `sessionx completions <bash\|zsh\|fish>` | Print completion script. |
 
 Add `-v` to any command to see the underlying `tmux`/`git` calls.
