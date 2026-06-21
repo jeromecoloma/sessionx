@@ -29,6 +29,9 @@ will be called out under a **Breaking** subheading.
 - Hook-less agents (codex, aider, gemini, …) are auto-detected by foreground
   process name and tracked via the existing heuristics.
 - Shell completions for `mode` and `agent-hooks` (bash/zsh/fish).
+- `prefix + X` keybind to kill the current session via `sessionx rm --force`,
+  gated by a `confirm-before` y/n prompt. Registered automatically whenever
+  sessionx creates a session.
 
 ### Breaking
 - `sessionx mode agent` no longer creates the `sessionx-agentmode` session,
