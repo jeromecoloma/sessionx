@@ -311,6 +311,9 @@ fn plain_tmux(cwd: &Path) -> Result<()> {
     tmux::set_user_option(&name, "sessionx-handle", base)?;
     tmux::set_user_option(&name, "sessionx-plain", "1")?;
 
+    // Bind prefix+X (confirm) to kill the current session.
+    let _ = tmux::bind_kill_key();
+
     if let Some(theme_name) = theme {
         let spec = StatusSpec {
             enabled: true,

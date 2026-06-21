@@ -195,6 +195,26 @@ pub fn kill_session(name: &str) -> Result<()> {
     Ok(())
 }
 
+/// Bind `prefix + X` to kill the *current* session via `sessionx rm`, gated by
+/// a `confirm-before` y/n prompt. Server-global (tmux key tables aren't
+/// per-session), so re-binding the same key on each session create is a no-op.
+/// `#S` expands to the session the key was pressed in.
+pub fn bind_kill_key() -> Result<()> {
+    let sx = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.to_str().map(String::from))
+        .unwrap_or_else(|| "sessionx".to_string());
+    run(&[
+        "bind-key",
+        "X",
+        "confirm-before",
+        "-p",
+        "kill sessionx session '#S'? (y/n)",
+        &format!("run-shell '{sx} rm \"#S\" --force'"),
+    ])?;
+    Ok(())
+}
+
 pub fn list_sessions() -> Result<Vec<String>> {
     if !run_quiet(&["info"]) {
         // Server not running.

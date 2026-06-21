@@ -80,6 +80,9 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool, force_root: bool) -> 
     )?;
     tmux::set_user_option(&session, "sessionx-handle", handle)?;
 
+    // Bind prefix+X (confirm) to kill the current session.
+    let _ = tmux::bind_kill_key();
+
     // 5. Status bar (per-session, scoped).
     status::apply(&session, &loaded.config.status)?;
 
