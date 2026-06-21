@@ -21,8 +21,8 @@
 use std::collections::HashMap;
 use std::time::Duration;
 
-use anyhow::Result;
 use ansi_to_tui::IntoText;
+use anyhow::Result;
 use ratatui::crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -358,7 +358,8 @@ impl App {
 
         // Reserve the bottom inner row for a scrollbar when content overflows.
         let show_bar = max_scroll > 0 && inner_w > 0;
-        let text_height = (area.height.saturating_sub(2) as usize).saturating_sub(show_bar as usize);
+        let text_height =
+            (area.height.saturating_sub(2) as usize).saturating_sub(show_bar as usize);
         if text.lines.len() > text_height {
             text.lines.drain(0..text.lines.len() - text_height);
         }
