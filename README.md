@@ -21,8 +21,12 @@ A small tmux session manager. Sits between [tmuxp](https://tmuxp.git-pull.com/) 
 ### Homebrew (macOS / Linux)
 
 ```sh
-brew install jeromecoloma/sessionx/sessionx
+brew tap jeromecoloma/sessionx
+brew trust jeromecoloma/sessionx   # Homebrew 6.0+ requires trusting non-official taps
+brew install sessionx
 ```
+
+On Homebrew 6.0+, non-official taps must be trusted before brew will load their formulae — otherwise you'll see `Warning: Skipping sessionx: tap formula is not trusted`. The `brew trust` step is a one-time action per machine (reverse it with `brew untrust jeromecoloma/sessionx`).
 
 Tap repo: [jeromecoloma/homebrew-sessionx](https://github.com/jeromecoloma/homebrew-sessionx).
 
