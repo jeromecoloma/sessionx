@@ -33,18 +33,17 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool, force_root: bool) -> 
     // 1. Worktree (if applicable). `force_root` skips worktree creation even
     //    in worktree-mode projects — used for "main project session" attach.
     let use_worktree = loaded.worktree_mode() && !force_root;
-    let (work_cwd, branch) = if use_worktree {
+    let (work_cwd, branch, created_worktree) = if use_worktree {
         if !worktree::is_git_repo(&loaded.project_root) {
             return Err(anyhow!(
                 "worktree_dir set but {} is not a git repository",
                 loaded.project_root.display()
             ));
         }
-        let p = worktree::create(&loaded, handle, base)?;
-        let b = worktree::handle_to_branch(handle, loaded.config.worktree_naming);
-        (p, Some(b))
+        let prepared = worktree::prepare(&loaded, handle, base)?;
+        (prepared.path, Some(prepared.branch), prepared.created)
     } else {
-        (loaded.project_root.clone(), None)
+        (loaded.project_root.clone(), None, false)
     };
 
     // 2. post_create hooks run inside the worktree (or project root) BEFORE tmux,
@@ -63,7 +62,7 @@ pub fn run(handle: &str, base: Option<&str>, attach: bool, force_root: bool) -> 
     };
     // Skip post_create when attaching the project root in worktree mode
     // (force_root) — hooks like Herd setup are worktree-specific.
-    let skip_hooks = loaded.worktree_mode() && force_root;
+    let skip_hooks = loaded.worktree_mode() && (force_root || !created_worktree);
     if !skip_hooks && !loaded.config.post_create.is_empty() {
         hooks::run_all("post_create", &loaded.config.post_create, &hook_env)?;
     }

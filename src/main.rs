@@ -59,7 +59,7 @@ enum Cmd {
     },
     /// Open .sessionx.yaml in $VISUAL/$EDITOR
     Edit,
-    /// Create (or attach to) a session. Worktree-mode also creates a git worktree.
+    /// Create (or attach to) a session. Worktree-mode creates or reopens a git worktree.
     Add {
         name: String,
         #[arg(long)]

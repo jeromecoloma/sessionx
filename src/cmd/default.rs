@@ -16,7 +16,7 @@ enum Action {
     Init,
     Open(String),
     OpenPlain(String),
-    OrphanWorktree(String),
+    ReopenOrphanWorktree(String),
     PlainTmux,
     Quit,
 }
@@ -111,9 +111,9 @@ pub fn run() -> Result<()> {
     if let Some(l) = &loaded {
         for handle in orphan_worktrees(l, &managed) {
             labels.push(format!(
-                "Clean up orphan worktree: {handle}  \x1b[2m[no session]\x1b[0m"
+                "Reopen orphan worktree: {handle}  \x1b[2m[no session]\x1b[0m"
             ));
-            actions.push(Action::OrphanWorktree(handle));
+            actions.push(Action::ReopenOrphanWorktree(handle));
         }
     }
 
@@ -137,7 +137,7 @@ pub fn run() -> Result<()> {
         } else {
             (
                 &["ctrl-x"],
-                Some("enter: select  ·  ctrl-x: delete session"),
+                Some("enter: select  ·  ctrl-x: delete session/worktree"),
             )
         };
     let Some((idx, key)) = picker::select_with_keys("sessionx", &labels, expect_keys, header)?
@@ -155,7 +155,7 @@ pub fn run() -> Result<()> {
             Action::OpenPlain(name) => {
                 return delete_plain(name);
             }
-            Action::OrphanWorktree(handle) => {
+            Action::ReopenOrphanWorktree(handle) => {
                 return delete_orphan_worktree(loaded.as_ref(), handle);
             }
             _ => {}
@@ -176,7 +176,7 @@ pub fn run() -> Result<()> {
         Action::Init => cmd::init::run(cmd::init::InitOpts::default()),
         Action::Open(name) => cmd::open::run(Some(name), false),
         Action::OpenPlain(name) => tmux::attach_or_switch(name),
-        Action::OrphanWorktree(handle) => delete_orphan_worktree(loaded.as_ref(), handle),
+        Action::ReopenOrphanWorktree(handle) => cmd::add::run(handle, None, true, false),
         Action::PlainTmux => plain_tmux(&cwd),
         Action::Quit => Ok(()),
     }
@@ -198,6 +198,7 @@ fn orphan_worktrees(loaded: &config::Loaded, managed: &[ManagedSession]) -> Vec<
     let Ok(entries) = std::fs::read_dir(&abs) else {
         return vec![];
     };
+    let registered = registered_worktree_handles(loaded, &abs);
     let here = loaded.project_root.display().to_string();
     let mut active: std::collections::HashSet<String> = std::collections::HashSet::new();
     for m in managed {
@@ -205,7 +206,7 @@ fn orphan_worktrees(loaded: &config::Loaded, managed: &[ManagedSession]) -> Vec<
             active.insert(m.handle.clone());
         }
     }
-    let mut out = vec![];
+    let mut out: std::collections::BTreeSet<String> = Default::default();
     for e in entries.flatten() {
         if !e.file_type().map(|t| t.is_dir()).unwrap_or(false) {
             continue;
@@ -213,12 +214,69 @@ fn orphan_worktrees(loaded: &config::Loaded, managed: &[ManagedSession]) -> Vec<
         let Some(name) = e.file_name().to_str().map(|s| s.to_string()) else {
             continue;
         };
-        if !active.contains(&name) {
-            out.push(name);
+        let handle = registered.get(&name).unwrap_or(&name);
+        if !active.contains(handle) {
+            out.insert(handle.clone());
         }
     }
-    out.sort();
-    out
+    out.into_iter().collect()
+}
+
+fn registered_worktree_handles(
+    loaded: &config::Loaded,
+    worktree_dir: &Path,
+) -> std::collections::HashMap<String, String> {
+    let out = Command::new("git")
+        .current_dir(&loaded.project_root)
+        .args(["worktree", "list", "--porcelain"])
+        .output();
+    let Ok(out) = out else {
+        return Default::default();
+    };
+    if !out.status.success() {
+        return Default::default();
+    }
+
+    let text = String::from_utf8_lossy(&out.stdout);
+    let mut map = std::collections::HashMap::new();
+    let mut path: Option<std::path::PathBuf> = None;
+    let mut branch: Option<String> = None;
+
+    let mut flush = |path: &mut Option<std::path::PathBuf>, branch: &mut Option<String>| {
+        let Some(p) = path.take() else {
+            return;
+        };
+        let Some(leaf) = p
+            .file_name()
+            .and_then(|s| s.to_str())
+            .map(|s| s.to_string())
+        else {
+            *branch = None;
+            return;
+        };
+        if !p.starts_with(worktree_dir) {
+            *branch = None;
+            return;
+        }
+        if let Some(handle) = branch.take() {
+            map.insert(leaf, handle);
+        }
+    };
+
+    for line in text.lines() {
+        if line.is_empty() {
+            flush(&mut path, &mut branch);
+            continue;
+        }
+        if let Some(p) = line.strip_prefix("worktree ") {
+            path = Some(std::path::PathBuf::from(p));
+        } else if let Some(b) = line.strip_prefix("branch refs/heads/") {
+            branch = Some(b.to_string());
+        }
+    }
+    flush(&mut path, &mut branch);
+
+    map
 }
 
 fn delete_orphan_worktree(loaded: Option<&config::Loaded>, handle: &str) -> Result<()> {

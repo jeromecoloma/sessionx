@@ -47,11 +47,49 @@ pub fn worktree_path(loaded: &Loaded, handle: &str) -> Result<PathBuf> {
     Ok(abs.join(leaf))
 }
 
-pub fn create(loaded: &Loaded, handle: &str, base: Option<&str>) -> Result<PathBuf> {
+pub struct PreparedWorktree {
+    pub path: PathBuf,
+    pub branch: String,
+    pub created: bool,
+}
+
+pub fn prepare(loaded: &Loaded, handle: &str, base: Option<&str>) -> Result<PreparedWorktree> {
     let path = worktree_path(loaded, handle)?;
+    let branch = handle_to_branch(handle, loaded.config.worktree_naming);
+
     if path.exists() {
-        return Err(anyhow!("worktree path already exists: {}", path.display()));
+        if base.is_some() {
+            return Err(anyhow!(
+                "worktree path already exists: {}; refusing to use --base (would be ignored)",
+                path.display()
+            ));
+        }
+        if !is_git_repo(&path) {
+            return Err(anyhow!(
+                "worktree path already exists but is not a git repository: {}",
+                path.display()
+            ));
+        }
+        return Ok(PreparedWorktree {
+            path,
+            branch,
+            created: false,
+        });
     }
+
+    create_new(loaded, base, path, branch.clone()).map(|path| PreparedWorktree {
+        path,
+        branch,
+        created: true,
+    })
+}
+
+fn create_new(
+    loaded: &Loaded,
+    base: Option<&str>,
+    path: PathBuf,
+    branch: String,
+) -> Result<PathBuf> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -60,7 +98,6 @@ pub fn create(loaded: &Loaded, handle: &str, base: Option<&str>) -> Result<PathB
     // would otherwise make `add` fail with "missing but already registered".
     let _ = git(&loaded.project_root, &["worktree", "prune"]);
 
-    let branch = handle_to_branch(handle, loaded.config.worktree_naming);
     let path_s = path.to_string_lossy().to_string();
 
     // If the branch already exists, check it out into the worktree as-is.

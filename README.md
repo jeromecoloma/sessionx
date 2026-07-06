@@ -73,7 +73,7 @@ Run `sessionx` with no subcommand to get a context-aware menu:
 - **Attach/create project session** — when `.sessionx.yaml` is found
 - **Init `.sessionx.yaml` here** — when in a git repo without a config
 - **Open managed session** — any sessionx-managed session, across projects
-- **Clean up orphan worktree** — leftover worktrees from a failed teardown (current project only)
+- **Reopen orphan worktree** — restore a tmux session for a worktree left on disk (current project only)
 - **New plain tmux session** — auto-named, untracked
 
 The picker uses [`fzf`](https://github.com/junegunn/fzf) when installed, otherwise falls back to a built-in TUI. The installer offers to install fzf via Homebrew on macOS.
@@ -89,7 +89,7 @@ sessionx open my-project-work  # attach (or switch-client if already in tmux)
 ## Modes
 
 - **plain** (default): `sessionx add <name>` spawns a tmux session in the project directory.
-- **worktree**: set `worktree_dir:` in `.sessionx.yaml` and `add` will also create a git worktree + branch named `<name>`. `rm` tears it down.
+- **worktree**: set `worktree_dir:` in `.sessionx.yaml` and `add` will create a git worktree + branch named `<name>`, or reopen an existing worktree at that handle. `rm` tears it down.
 
 ## Status bar
 
@@ -203,7 +203,7 @@ Agents without hooks (codex, aider, …) are still detected by their foreground 
 | `sessionx hooks [list\|info\|install\|update\|repo] [<id>]` | Manage stack-specific hook recipes from the [`sessionx-hooks`](https://github.com/jeromecoloma/sessionx-hooks) repo. `list` shows what's available; `install <id>` drops scripts into `~/.sessionx/scripts/<id>/`. `sessionx init` calls `install` for you when you opt into a recipe. Override the source with `SX_HOOKS_REPO` / `SX_HOOKS_REF`. |
 | `sessionx config [path\|get\|set <k> <v>]` | Manage the global config (`~/.config/sessionx/config.yaml`). No args opens it in `$VISUAL`/`$EDITOR` (creates a starter file if missing). `path` prints the file location; `get [agent]` reads; `set agent <name>` writes. |
 | `sessionx edit` | Open `.sessionx.yaml` in `$VISUAL`/`$EDITOR`. |
-| `sessionx add <name> [--base <ref>] [--no-attach]` | Create + attach. |
+| `sessionx add <name> [--base <ref>] [--no-attach]` | Create/reopen + attach. |
 | `sessionx ls [--all] [--names-only]` | List sessions for this project; `--all` lists every managed session globally. |
 | `sessionx open [<session>]` | Attach to any sessionx-managed session globally. No arg prints the list. Works from any cwd. |
 | `sessionx rm <name> [--force]` | Tear down. Accepts a handle or full session name; recovers leftover worktrees if a previous run failed mid-teardown. |
