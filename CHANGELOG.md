@@ -10,6 +10,23 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-07-06
+
+### Fixed
+- `sessionx add <name>` now reopens an existing git worktree for that handle
+  instead of failing with "worktree path already exists", allowing unfinished
+  worktree sessions to be restored after tmux/session loss.
+- The no-arg picker now shows orphaned worktrees as **Reopen orphan worktree**
+  entries. Pressing Enter creates a fresh managed tmux session rooted at the
+  existing worktree; destructive cleanup remains behind `ctrl-x`.
+
+### Changed
+- Reopening an existing worktree skips `post_create` hooks so setup scripts are
+  not rerun against already-in-progress work.
+- Orphan detection now prefers Git's registered branch name when mapping
+  worktree directories back to handles, which keeps basename/full worktree
+  naming modes aligned.
+
 ## [0.2.1] - 2026-06-21
 
 ### Changed
@@ -245,7 +262,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.2.2
 [0.2.1]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.2.1
 [0.2.0]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.2.0
 [0.1.13]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.1.13
