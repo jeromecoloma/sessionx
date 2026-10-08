@@ -10,6 +10,8 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-08
+
 ### Fixed
 - Agent status titles no longer appear on terminal tabs attached to a different
   session. When an agent's session has no attached client, its tab title is now
@@ -268,7 +270,8 @@ Initial release.
 - `post_create` and `pre_remove` hooks with `SX_*` env vars.
 - Shell completions for `bash`, `zsh`, `fish`.
 
-[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/jeromecoloma/sessionx/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.2.3
 [0.2.2]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.2.2
 [0.2.1]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.2.1
 [0.2.0]: https://github.com/jeromecoloma/sessionx/releases/tag/v0.2.0
