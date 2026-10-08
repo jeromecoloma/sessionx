@@ -55,25 +55,27 @@ pub fn send(session: &str, body: &str) {
     if agent::global_bell_enabled() {
         seq.push('\x07');
     }
-    write_clients(session, &seq);
+    write_clients(session, &seq, true);
 }
 
 /// Set the outer terminal's title (OSC 2) on every client attached to
 /// `session`. Persists in the tab bar until the next title write — tmux
 /// leaves the outer title alone unless `set-titles` is on — so the glyph
-/// shows the agent's last reported state at a glance.
+/// shows the agent's last reported state at a glance. No fallback to other
+/// clients: a title labels the tab, so it must never land on a tab showing
+/// a different session.
 pub fn set_title(session: &str, text: &str) {
     if !agent::global_title_enabled() {
         return;
     }
-    write_clients(session, &format!("\x1b]2;{}\x1b\\", clean(text)));
+    write_clients(session, &format!("\x1b]2;{}\x1b\\", clean(text)), false);
 }
 
-/// Write a raw sequence to every tmux client tty attached to `session`,
-/// falling back to all clients when none are.
-fn write_clients(session: &str, seq: &str) {
+/// Write a raw sequence to every tmux client tty attached to `session`.
+/// With `fallback`, write to all clients when none are attached.
+fn write_clients(session: &str, seq: &str, fallback: bool) {
     let mut ttys = tmux::client_ttys(Some(session));
-    if ttys.is_empty() {
+    if ttys.is_empty() && fallback {
         ttys = tmux::client_ttys(None);
     }
     for tty in ttys {
