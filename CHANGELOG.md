@@ -10,6 +10,12 @@ will be called out under a **Breaking** subheading.
 
 ## [Unreleased]
 
+### Fixed
+- Agent status titles no longer appear on terminal tabs attached to a different
+  session. When an agent's session has no attached client, its tab title is now
+  skipped instead of being written to every client on the tmux server. The
+  desktop notification still reaches every client in that case.
+
 ## [0.2.2] - 2026-07-06
 
 ### Fixed
